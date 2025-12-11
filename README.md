@@ -1,4 +1,4 @@
-# ResearchConnect
+# ProfHub
 
 A comprehensive platform connecting professors with students for research collaboration opportunities. Professors can post research gigs, and students can browse and apply to opportunities that match their interests and qualifications.
 
