@@ -8,6 +8,7 @@ database = client[settings.database_name]
 professors_collection = database.get_collection("professors")
 gigs_collection = database.get_collection("gigs")
 applications_collection = database.get_collection("applications")
+notifications_collection = database.get_collection("notifications")
 
 
 async def get_database():

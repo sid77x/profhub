@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import axios from 'axios';
-
+import { applicationsApi } from '../../api/applications';
 import toast from 'react-hot-toast';
 
 const API_URL = 'http://localhost:8000/api';
@@ -15,6 +15,8 @@ const GigDetail: React.FC = () => {
   const [professor, setProfessor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [existingApplication, setExistingApplication] = useState<any>(null);
   const [formData, setFormData] = useState({
     student_name: '',
     student_email: '',
@@ -29,9 +31,33 @@ const GigDetail: React.FC = () => {
       navigate('/student/login');
       return;
     }
-    fetchGig();
-    fetchStudentData();
+    loadPageData();
   }, [id, studentId]);
+
+  const loadPageData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchGig(),
+        fetchStudentData(),
+        checkExistingApplication()
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkExistingApplication = async () => {
+    if (!id || !studentId) return;
+    try {
+      const result = await applicationsApi.checkApplicationExists(id, studentId);
+      console.log('Application check result:', result);
+      setHasApplied(result.has_applied);
+      setExistingApplication(result.application);
+    } catch (error) {
+      console.error('Failed to check application status:', error);
+    }
+  };
 
   const fetchGig = async () => {
     try {
@@ -43,8 +69,6 @@ const GigDetail: React.FC = () => {
       }
     } catch (error) {
       toast.error('Failed to load gig');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -77,13 +101,18 @@ const GigDetail: React.FC = () => {
     setApplying(true);
 
     try {
-      await axios.post(`${API_URL}/applications`, {
+      const response = await axios.post(`${API_URL}/applications`, {
         gig_id: id,
         student_id: studentId,
         ...formData,
       });
+      
+      // Update local state immediately
+      setHasApplied(true);
+      setExistingApplication(response.data);
+      
       toast.success('Application submitted successfully!');
-      navigate('/student/applications');
+      // Don't navigate away, let them see the success message
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to submit application');
     } finally {
@@ -215,9 +244,39 @@ const GigDetail: React.FC = () => {
 
         {/* Application Form */}
         <div className="bg-white rounded-xl shadow-sm p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Apply for this Gig</h2>
+          {hasApplied ? (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Already Submitted</h2>
+              <p className="text-gray-600 mb-4">You have already applied to this gig</p>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg">
+                <span className="text-sm font-semibold text-gray-700">Status:</span>
+                <span className={`px-3 py-1 text-xs font-bold rounded-full ${
+                  existingApplication?.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                  existingApplication?.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {existingApplication?.status?.toUpperCase()}
+                </span>
+              </div>
+              <div className="mt-6">
+                <Link
+                  to="/student/gigs"
+                  className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                >
+                  Browse Other Gigs
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Apply for this Gig</h2>
 
-          <form onSubmit={handleApply} className="space-y-4">
+              <form onSubmit={handleApply} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Name</label>
@@ -293,6 +352,8 @@ const GigDetail: React.FC = () => {
               {applying ? 'Submitting...' : 'Submit Application'}
             </button>
           </form>
+            </>
+          )}
         </div>
     </div>
   );

@@ -10,6 +10,7 @@ const ViewGigApplications: React.FC = () => {
   const { currentGig, fetchGig } = useGigsStore();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -25,17 +26,39 @@ const ViewGigApplications: React.FC = () => {
       setApplications(data);
     } catch (error) {
       console.error('Error loading applications:', error);
+      alert('Failed to load applications. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleStatusUpdate = async (applicationId: string, status: string) => {
+    setUpdatingStatus(applicationId);
     try {
-      await applicationsApi.updateApplicationStatus(applicationId, status);
-      loadApplications(); // Reload applications
-    } catch (error) {
+      // Optimistically update UI
+      setApplications(prev => 
+        prev.map(app => 
+          app.id === applicationId 
+            ? { ...app, status } 
+            : app
+        )
+      );
+      
+      // Update on server
+      const updatedApp = await applicationsApi.updateApplicationStatus(applicationId, status);
+      console.log('Status updated successfully:', updatedApp);
+      
+      // Show success message
+      const statusText = status === 'accepted' ? 'Accepted' : 'Rejected';
+      console.log(`Application ${statusText} successfully!`);
+    } catch (error: any) {
       console.error('Error updating status:', error);
+      console.error('Error response:', error.response?.data);
+      alert(`Failed to update application status: ${error.response?.data?.detail || error.message}`);
+      // Reload to get correct state
+      loadApplications();
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
@@ -153,20 +176,30 @@ const ViewGigApplications: React.FC = () => {
                     <div className="ml-4 flex flex-col space-y-3">
                       <button
                         onClick={() => handleStatusUpdate(app.id, 'accepted')}
-                        className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-semibold rounded-xl hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+                        disabled={updatingStatus === app.id}
+                        className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-semibold rounded-xl hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                        {updatingStatus === app.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
                         Accept
                       </button>
                       <button
                         onClick={() => handleStatusUpdate(app.id, 'rejected')}
-                        className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-semibold rounded-xl hover:from-red-700 hover:to-red-800 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+                        disabled={updatingStatus === app.id}
+                        className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-semibold rounded-xl hover:from-red-700 hover:to-red-800 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        {updatingStatus === app.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        )}
                         Reject
                       </button>
                     </div>

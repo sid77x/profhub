@@ -54,7 +54,7 @@ const Register: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
           </div>
-          <h1 className="ml-3 text-3xl font-bold text-gray-900">ProfHub</h1>
+          <h1 className="ml-3 text-3xl font-bold text-gray-900">ResearchConnect</h1>
         </div>
         <h2 className="text-center text-2xl font-bold text-gray-900 mb-2">
           Create your account
@@ -99,9 +99,9 @@ const Register: React.FC = () => {
                 value={formData.userType}
                 onChange={(e) => setFormData({ ...formData, userType: e.target.value })}
                 className="block w-full px-3.5 py-2.5 border border-gray-300 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition sm:text-sm"
+                disabled
               >
                 <option value="professor">Professor</option>
-                <option value="student" disabled>Student (Coming Soon)</option>
               </select>
             </div>
 

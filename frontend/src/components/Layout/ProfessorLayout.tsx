@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { User, LogOut } from 'lucide-react';
 import { useProfessorStore } from '../../store/professorStore';
 import { useAuthStore } from '../../store/authStore';
+import NotificationPanel from '../NotificationPanel';
 
 const ProfessorLayout: React.FC = () => {
   const location = useLocation();
@@ -40,7 +41,7 @@ const ProfessorLayout: React.FC = () => {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-2xl font-bold text-primary-600">ProfHub</h1>
+                <h1 className="text-2xl font-bold text-primary-600">ResearchConnect</h1>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navItems.map((item) => (
@@ -58,7 +59,8 @@ const ProfessorLayout: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center gap-4">
+              <NotificationPanel />
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}

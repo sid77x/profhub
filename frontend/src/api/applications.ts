@@ -16,4 +16,9 @@ export const applicationsApi = {
     const response = await api.put(`/applications/${applicationId}/status?status=${status}`);
     return response.data;
   },
+
+  checkApplicationExists: async (gigId: string, studentId: string): Promise<{ has_applied: boolean; application: Application | null }> => {
+    const response = await api.get(`/applications/check/${gigId}/${studentId}`);
+    return response.data;
+  },
 };

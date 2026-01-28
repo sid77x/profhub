@@ -66,7 +66,7 @@ const StudentRegister: React.FC = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Student Registration</h1>
-          <p className="text-gray-600">Join ProfHub to find research opportunities</p>
+          <p className="text-gray-600">Join ResearchConnect to find research opportunities</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">

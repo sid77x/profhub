@@ -57,6 +57,17 @@ async def init_db():
     print("   ✓ Created index on 'student_id'")
     print("   ✓ Created index on 'status'")
     
+    print("\n5. Setting up 'notifications' collection...")
+    notifications = db.get_collection("notifications")
+    await notifications.create_index("user_id")
+    await notifications.create_index("read")
+    await notifications.create_index([("user_id", 1), ("read", 1)])
+    await notifications.create_index("created_at")
+    print("   ✓ Created index on 'user_id'")
+    print("   ✓ Created index on 'read'")
+    print("   ✓ Created compound index on 'user_id' and 'read'")
+    print("   ✓ Created index on 'created_at'")
+    
     # Show database stats
     print("\n" + "="*50)
     print("Database Statistics:")
@@ -69,12 +80,14 @@ async def init_db():
     students_count = await students.count_documents({})
     gigs_count = await gigs.count_documents({})
     apps_count = await applications.count_documents({})
+    notif_count = await notifications.count_documents({})
     
     print(f"\nDocument counts:")
     print(f"  - Professors: {prof_count}")
     print(f"  - Students: {students_count}")
     print(f"  - Gigs: {gigs_count}")
     print(f"  - Applications: {apps_count}")
+    print(f"  - Notifications: {notif_count}")
     
     print("\n✓ Database initialization complete!")
     print(f"\nYou can now start your backend server:")
