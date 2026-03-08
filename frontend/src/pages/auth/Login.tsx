@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { authApi } from '../../api/auth';
 import { useAuthStore } from '../../store/authStore';
+import ThemeToggle from '../../components/ThemeToggle';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -17,10 +16,8 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const response = await authApi.login(formData);
-      // Decode token to get professor ID (simple base64 decode of JWT payload)
       const payload = JSON.parse(atob(response.access_token.split('.')[1]));
       setAuth(response.access_token, payload.id || response.professor_id, 'professor');
       navigate('/professor/dashboard');
@@ -32,122 +29,102 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex items-center justify-center mb-8">
-          <div className="bg-blue-600 w-12 h-12 rounded-xl flex items-center justify-center">
-            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
+    <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Decorative blobs */}
+      <div className="absolute top-0 -left-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-blob" />
+      <div className="absolute bottom-0 -right-40 w-80 h-80 bg-secondary/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-blob animation-delay-4000" />
+
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sm:mx-auto sm:w-full sm:max-w-md relative z-10"
+      >
+        <div className="flex items-center justify-center mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-glow">
+            <span className="text-primary-foreground font-bold text-lg">RC</span>
           </div>
-          <h1 className="ml-3 text-3xl font-bold text-gray-900">ResearchConnect</h1>
         </div>
-        <h2 className="text-center text-2xl font-bold text-gray-900 mb-2">
-          Sign in to your account
-        </h2>
-        <p className="text-center text-sm text-gray-600">
+        <h1 className="text-center text-3xl font-extrabold gradient-text mb-2">ResearchConnect</h1>
+        <h2 className="text-center text-xl font-bold text-foreground mb-1">Welcome back, Professor! 👋</h2>
+        <p className="text-center text-sm text-muted-foreground">
           Don't have an account?{' '}
-          <button
-            onClick={() => navigate('/register')}
-            className="font-medium text-blue-600 hover:text-blue-500"
-          >
-            Create one now
+          <button onClick={() => navigate('/register')} className="font-semibold text-primary hover:text-primary-glow transition-colors">
+            Create one
           </button>
-          {' | '}
-          <button
-            onClick={() => navigate('/student/login')}
-            className="font-medium text-blue-600 hover:text-blue-500"
-          >
+          {' · '}
+          <button onClick={() => navigate('/student/login')} className="font-semibold text-secondary hover:opacity-80 transition-colors">
             Student Login
           </button>
         </p>
-      </div>
+      </motion.div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-10 px-8 shadow-sm rounded-xl border border-gray-200">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
+      >
+        <div className="glass-strong rounded-2xl p-8 shadow-xl">
           <form className="space-y-5" onSubmit={handleSubmit}>
             {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-4 flex items-center gap-3">
-                <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 flex items-center gap-3"
+              >
+                <span className="text-destructive text-lg">⚠️</span>
+                <p className="text-sm text-destructive font-medium">{error}</p>
+              </motion.div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Email address
-              </label>
+              <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-1.5">Email address</label>
               <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
+                id="email" type="email" autoComplete="email" required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="appearance-none block w-full px-3.5 py-2.5 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition sm:text-sm"
+                className="w-full px-4 py-2.5 bg-muted border border-input rounded-xl text-foreground placeholder-muted-foreground focus-ring transition-all sm:text-sm"
                 placeholder="professor@university.edu"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Password
-              </label>
+              <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-1.5">Password</label>
               <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
+                id="password" type="password" autoComplete="current-password" required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="appearance-none block w-full px-3.5 py-2.5 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition sm:text-sm"
+                className="w-full px-4 py-2.5 bg-muted border border-input rounded-xl text-foreground placeholder-muted-foreground focus-ring transition-all sm:text-sm"
                 placeholder="Enter your password"
               />
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                  Forgot password?
-                </a>
-              </div>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <input type="checkbox" className="w-4 h-4 rounded border-input text-primary focus:ring-ring" />
+                Remember me
+              </label>
+              <a href="#" className="text-sm font-semibold text-primary hover:text-primary-glow transition-colors">
+                Forgot password?
+              </a>
             </div>
 
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign in'
-                )}
-              </button>
-            </div>
+            <button
+              type="submit" disabled={loading}
+              className="w-full py-2.5 px-4 rounded-xl text-sm font-bold text-primary-foreground bg-primary hover:bg-primary-glow shadow-glow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <><div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent" /> Signing in...</>
+              ) : 'Sign in →'}
+            </button>
           </form>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

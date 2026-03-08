@@ -2,12 +2,12 @@ import { api } from './axios';
 import { Professor } from '../types';
 
 export const professorApi = {
-  getProfile: async (professorId: number): Promise<Professor> => {
+  getProfile: async (professorId: string): Promise<Professor> => {
     const response = await api.get(`/professors/${professorId}`);
     return response.data;
   },
 
-  updateProfile: async (professorId: number, data: Partial<Professor>): Promise<Professor> => {
+  updateProfile: async (professorId: string, data: Partial<Professor>): Promise<Professor> => {
     const response = await api.put(`/professors/${professorId}`, data);
     return response.data;
   },

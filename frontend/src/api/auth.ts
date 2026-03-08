@@ -10,7 +10,8 @@ export interface RegisterRequest {
   email: string;
   password: string;
   department: string;
-  qualification: string;
+  qualification?: string;
+  college_name?: string;
   research_areas?: string;
   experience_years?: number;
 }
@@ -18,6 +19,7 @@ export interface RegisterRequest {
 export interface AuthResponse {
   access_token: string;
   token_type: string;
+  professor_id?: string;
 }
 
 export const authApi = {
