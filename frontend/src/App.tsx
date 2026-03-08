@@ -1,9 +1,10 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ProfessorLayout from './components/Layout/ProfessorLayout';
 import StudentLayout from './components/Layout/StudentLayout';
+import HomePage from './pages/HomePage';
 import Dashboard from './pages/professor/Dashboard';
 import Profile from './pages/professor/Profile';
 import OpenGigs from './pages/professor/OpenGigs';
@@ -54,7 +55,7 @@ const App: React.FC = () => {
       />
       <Routes>
         {/* Landing / Home */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<HomePage />} />
         
         {/* Professor Auth */}
         <Route path="/login" element={<Login />} />
