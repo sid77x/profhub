@@ -12,12 +12,12 @@ const StudentProfile: React.FC = () => {
   const { student, fetchStudent, updateStudent } = useStudentStore();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', reg_no: '', department: '', year: '', cgpa: '', college_name: '', bio: '', skills: [] as string[], resume_url: '', id_card_image: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', reg_no: '', department: '', year: '', cgpa: '', college_name: '', bio: '', previous_publications: '', skills: [] as string[], resume_url: '', id_card_image: '' });
   const [skillInput, setSkillInput] = useState('');
 
   useEffect(() => { if (studentId) fetchStudent(studentId); }, [studentId, fetchStudent]);
   useEffect(() => {
-    if (student) setFormData({ name: student.name || '', email: student.email || '', reg_no: student.reg_no || '', department: student.department || '', year: String(student.year || ''), cgpa: String(student.cgpa || ''), college_name: student.college_name || '', bio: student.bio || '', skills: student.skills || [], resume_url: student.resume_url || '', id_card_image: student.id_card_image || '' });
+    if (student) setFormData({ name: student.name || '', email: student.email || '', reg_no: student.reg_no || '', department: student.department || '', year: String(student.year || ''), cgpa: String(student.cgpa || ''), college_name: student.college_name || '', bio: student.bio || '', previous_publications: student.previous_publications || '', skills: student.skills || [], resume_url: student.resume_url || '', id_card_image: student.id_card_image || '' });
   }, [student]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -56,6 +56,7 @@ const StudentProfile: React.FC = () => {
       if (String(formData.cgpa) !== String(student?.cgpa)) updateData.cgpa = parseFloat(formData.cgpa);
       if (formData.college_name !== student?.college_name) updateData.college_name = formData.college_name;
       if (formData.bio !== student?.bio) updateData.bio = formData.bio;
+      if (formData.previous_publications !== student?.previous_publications) updateData.previous_publications = formData.previous_publications;
       if (JSON.stringify(formData.skills) !== JSON.stringify(student?.skills)) updateData.skills = formData.skills;
       if (formData.resume_url !== student?.resume_url) updateData.resume_url = formData.resume_url;
       if (formData.id_card_image !== student?.id_card_image) updateData.id_card_image = formData.id_card_image;
@@ -77,7 +78,7 @@ const StudentProfile: React.FC = () => {
         <button onClick={() => navigate('/student/dashboard')} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
           <ArrowLeft className="w-5 h-5" /> Back to Dashboard
         </button>
-        <button onClick={() => { if (isEditing) { setIsEditing(false); if (student) setFormData({ name: student.name||'', email: student.email||'', reg_no: student.reg_no||'', department: student.department||'', year: String(student.year||''), college_name: student.college_name||'', bio: student.bio||'', skills: student.skills||[], resume_url: student.resume_url||'' }); } else setIsEditing(true); }}
+        <button onClick={() => { if (isEditing) { setIsEditing(false); if (student) setFormData({ name: student.name||'', email: student.email||'', reg_no: student.reg_no||'', department: student.department||'', year: String(student.year||''), cgpa: String(student.cgpa||''), college_name: student.college_name||'', bio: student.bio||'', previous_publications: student.previous_publications||'', skills: student.skills||[], resume_url: student.resume_url||'', id_card_image: student.id_card_image||'' }); } else setIsEditing(true); }}
           className={`px-6 py-2 rounded-xl font-semibold text-sm transition-all ${isEditing ? 'bg-muted text-foreground' : 'bg-primary text-primary-foreground hover:bg-primary-glow shadow-glow'}`}>
           {isEditing ? 'Cancel' : 'Edit Profile'}
         </button>
@@ -120,6 +121,19 @@ const StudentProfile: React.FC = () => {
           <div className="mb-6">
             <label className="block text-sm font-semibold text-foreground mb-1.5">Bio</label>
             <textarea name="bio" value={formData.bio} onChange={handleInputChange} disabled={!isEditing} rows={4} className={inputClass} placeholder="Tell us about yourself..." />
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-foreground mb-1.5">Previous Publications / Research Experience</label>
+            <textarea
+              name="previous_publications"
+              value={formData.previous_publications}
+              onChange={handleInputChange}
+              disabled={!isEditing}
+              rows={5}
+              className={inputClass}
+              placeholder="Add your publications, research internships, labs, or any research-based work experience..."
+            />
           </div>
 
           <div className="mb-6">

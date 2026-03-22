@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -18,39 +18,62 @@ interface Application {
   } | null;
 }
 
+const getStudentVisibleStatus = (app: Application): string => {
+  if (!app.gig) return 'gig cancelled';
+  if (app.gig.status === 'on-hold') return 'gig put on hold';
+  if (app.gig.status === 'closed' && app.status === 'pending') return 'gig cancelled';
+  return app.status;
+};
+
 const StudentDashboard: React.FC = () => {
   const { studentId } = useAuthStore();
   const navigate = useNavigate();
   const [student, setStudent] = useState<any>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
     if (!studentId) {
       navigate('/student/login');
       return;
     }
+    if (hasLoaded.current) return;
+    hasLoaded.current = true;
     fetchData();
   }, [studentId, navigate]);
 
   const fetchData = async () => {
-    try {
-      const [studentRes, appsRes] = await Promise.all([
-        axios.get(`${API_URL}/students/${studentId}`),
-        axios.get(`${API_URL}/students/${studentId}/applications`),
-      ]);
-      setStudent(studentRes.data);
-      setApplications(appsRes.data);
-    } catch (error) {
-      toast.error('Failed to load data');
-    } finally {
-      setLoading(false);
+    const [studentRes, appsRes] = await Promise.allSettled([
+      axios.get(`${API_URL}/students/${studentId}`),
+      axios.get(`${API_URL}/students/${studentId}/applications`),
+    ]);
+
+    if (studentRes.status === 'fulfilled') {
+      setStudent(studentRes.value.data);
+    } else {
+      toast.error('Failed to load profile details');
     }
+
+    if (appsRes.status === 'fulfilled') {
+      setApplications(appsRes.value.data);
+    } else {
+      toast.error('Failed to load applications');
+    }
+
+    setLoading(false);
   };
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
+
+  const firstName = student?.name?.trim()?.split(/\s+/)?.[0] || 'Student';
+  const metaBits = [
+    student?.department ? `📚 ${student.department}` : null,
+    student?.year ? `Year ${student.year}` : null,
+    student?.cgpa !== null && student?.cgpa !== undefined ? `CGPA: ${student.cgpa}` : null,
+  ].filter(Boolean) as string[];
 
   return (
     <div className="px-4 py-6 sm:px-0">
@@ -65,19 +88,20 @@ const StudentDashboard: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-3xl font-bold">
-                  Welcome back, {student?.name || 'Student'}!
+                  Welcome back, {firstName}!
                 </h2>
-                <p className="text-primary-foreground/90 text-lg flex items-center gap-2 mt-1">
-                  <span>📚 {student?.department}</span>
-                  <span>•</span>
-                  <span>Year {student?.year}</span>
-                  {student?.cgpa && (
-                    <>
-                      <span>•</span>
-                      <span>CGPA: {student.cgpa}</span>
-                    </>
-                  )}
-                </p>
+                {metaBits.length > 0 ? (
+                  <p className="text-primary-foreground/90 text-lg flex items-center gap-2 mt-1">
+                    {metaBits.map((bit, idx) => (
+                      <React.Fragment key={bit}>
+                        {idx > 0 && <span>•</span>}
+                        <span>{bit}</span>
+                      </React.Fragment>
+                    ))}
+                  </p>
+                ) : (
+                  <p className="text-primary-foreground/90 text-lg mt-1">Complete your profile to see details here.</p>
+                )}
               </div>
             </div>
           </div>
@@ -111,7 +135,22 @@ const StudentDashboard: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {applications.slice(0, 5).map((app) => (
-                <div key={app.id} className="border-2 border-border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all duration-200 bg-card">
+                <div
+                  key={app.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/student/gigs/${app.gig_id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/student/gigs/${app.gig_id}`);
+                    }
+                  }}
+                  className="border-2 border-border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all duration-200 bg-card cursor-pointer"
+                >
+                  {(() => {
+                    const visibleStatus = getStudentVisibleStatus(app);
+                    return (
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h4 className="font-bold text-lg text-card-foreground mb-2">
@@ -126,16 +165,20 @@ const StudentDashboard: React.FC = () => {
                     </div>
                     <span
                       className={`px-4 py-2 rounded-full text-sm font-bold ${
-                        app.status === 'accepted'
+                        visibleStatus === 'accepted'
                           ? 'bg-success/10 text-success ring-2 ring-success/20'
-                          : app.status === 'rejected'
+                          : visibleStatus === 'rejected' || visibleStatus === 'gig cancelled'
                           ? 'bg-destructive/10 text-destructive ring-2 ring-destructive/20'
+                          : visibleStatus === 'gig put on hold'
+                          ? 'bg-warning/10 text-warning ring-2 ring-warning/20'
                           : 'bg-warning/10 text-warning ring-2 ring-warning/20'
                       }`}
                     >
-                      {app.status.toUpperCase()}
+                      {visibleStatus.toUpperCase()}
                     </span>
                   </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>

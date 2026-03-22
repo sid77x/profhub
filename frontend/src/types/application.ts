@@ -5,6 +5,7 @@ export interface Application {
   student_email: string;
   student_year?: string;
   student_cgpa?: string;
+  student_previous_publications?: string;
   resume_link: string;
   cover_letter?: string;
   status: 'pending' | 'accepted' | 'rejected';
@@ -17,6 +18,7 @@ export interface ApplicationCreate {
   student_email: string;
   student_year?: string;
   student_cgpa?: string;
+  student_previous_publications?: string;
   resume_link: string;
   cover_letter?: string;
 }

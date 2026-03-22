@@ -20,7 +20,7 @@ const GigDetail: React.FC = () => {
   const [hasApplied, setHasApplied] = useState(false);
   const [existingApplication, setExistingApplication] = useState<any>(null);
   const [showIneligibleModal, setShowIneligibleModal] = useState(false);
-  const [formData, setFormData] = useState({ student_name: '', student_email: '', student_year: '', student_cgpa: '', resume_link: '', cover_letter: '' });
+  const [formData, setFormData] = useState({ student_name: '', student_email: '', student_year: '', student_cgpa: '', student_previous_publications: '', resume_link: '', cover_letter: '' });
 
   useEffect(() => { if (!studentId) { navigate('/student/login'); return; } loadPageData(); }, [id, studentId]);
 
@@ -45,7 +45,7 @@ const GigDetail: React.FC = () => {
   };
 
   const fetchStudentData = async () => {
-    try { const r = await axios.get(`${API_URL}/students/${studentId}`); setFormData(prev => ({ ...prev, student_name: r.data.name, student_email: r.data.email, student_year: r.data.year.toString(), student_cgpa: r.data.cgpa?.toString() || '', resume_link: r.data.resume_url || '' })); } catch {}
+    try { const r = await axios.get(`${API_URL}/students/${studentId}`); setFormData(prev => ({ ...prev, student_name: r.data.name, student_email: r.data.email, student_year: r.data.year.toString(), student_cgpa: r.data.cgpa?.toString() || '', student_previous_publications: r.data.previous_publications || '', resume_link: r.data.resume_url || '' })); } catch {}
   };
 
   // Parse CGPA requirement (e.g., "7.5 and above" → 7.5)

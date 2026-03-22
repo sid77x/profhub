@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Eye } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
@@ -13,6 +14,7 @@ const StudentLogin: React.FC = () => {
   const { setAuth } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,13 +89,31 @@ const StudentLogin: React.FC = () => {
 
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-1.5">Password</label>
-              <input
-                id="password" type="password" name="password" autoComplete="current-password" required
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-muted border border-input rounded-xl text-foreground placeholder-muted-foreground focus-ring transition-all sm:text-sm"
-                placeholder="Enter your password"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  autoComplete="current-password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 pr-12 bg-muted border border-input rounded-xl text-foreground placeholder-muted-foreground focus-ring transition-all sm:text-sm"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  aria-label="Press and hold to show password"
+                  onMouseDown={() => setShowPassword(true)}
+                  onMouseUp={() => setShowPassword(false)}
+                  onMouseLeave={() => setShowPassword(false)}
+                  onTouchStart={() => setShowPassword(true)}
+                  onTouchEnd={() => setShowPassword(false)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Eye className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between">

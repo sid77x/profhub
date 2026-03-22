@@ -96,6 +96,13 @@ const ViewGigApplications: React.FC = () => {
                       </div>
                     )}
 
+                    {app.student_previous_publications && (
+                      <div className="mt-4 bg-secondary/5 rounded-xl p-4 border-l-4 border-secondary">
+                        <p className="text-sm font-bold text-card-foreground mb-2">Previous Publications / Research Experience</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{app.student_previous_publications}</p>
+                      </div>
+                    )}
+
                     <div className="mt-4 flex items-center gap-4">
                       <a href={app.resume_link} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl hover:bg-primary-glow shadow-glow font-semibold transition-all">

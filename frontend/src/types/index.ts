@@ -16,9 +16,10 @@ export interface Student {
   email: string;
   reg_no: string;
   department: string;
-  year: number;
-  cgpa: number;
+  year?: number | null;
+  cgpa?: number | null;
   college_name?: string;
+  previous_publications?: string;
   skills?: string[];
   resume_url?: string;
   bio?: string;
