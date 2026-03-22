@@ -33,10 +33,12 @@ def student_doc_to_response(doc) -> dict:
         "reg_no": doc["reg_no"],
         "department": doc["department"],
         "year": doc["year"],
+        "cgpa": doc.get("cgpa"),
         "college_name": doc.get("college_name"),
         "skills": doc.get("skills", []),
         "resume_url": doc.get("resume_url"),
         "bio": doc.get("bio"),
+        "id_card_image": doc.get("id_card_image"),
     }
 
 
@@ -65,6 +67,7 @@ async def register_student(student: StudentCreate):
     student_dict["skills"] = []
     student_dict["resume_url"] = None
     student_dict["bio"] = None
+    student_dict["id_card_image"] = student.id_card_image  # Store base64 image
     student_dict["created_at"] = datetime.utcnow()
     
     result = await students_collection.insert_one(student_dict)

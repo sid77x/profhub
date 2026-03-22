@@ -98,8 +98,8 @@ const CreateGig: React.FC = () => {
             <input type="text" name="year_requirement" value={formData.year_requirement} onChange={handleInputChange} className={inputClass} placeholder="e.g., 3rd year and above" />
           </div>
           <div>
-            <label className={labelClass}>CGPA Requirement</label>
-            <input type="text" name="cgpa_requirement" value={formData.cgpa_requirement} onChange={handleInputChange} className={inputClass} placeholder="e.g., 3.5 and above" />
+            <label className={labelClass}>CGPA Requirement (0-10 scale)</label>
+            <input type="text" name="cgpa_requirement" value={formData.cgpa_requirement} onChange={handleInputChange} className={inputClass} placeholder="e.g., 7.5 and above" />
           </div>
         </div>
 

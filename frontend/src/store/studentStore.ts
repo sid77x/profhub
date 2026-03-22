@@ -11,10 +11,12 @@ interface Student {
   reg_no: string;
   department: string;
   year: number;
+  cgpa: number;
   college_name?: string;
   skills?: string[];
   resume_url?: string;
   bio?: string;
+  id_card_image?: string;
 }
 
 interface StudentState {

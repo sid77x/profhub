@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 import axios from 'axios';
 import { applicationsApi } from '../../api/applications';
 import toast from 'react-hot-toast';
+import { X } from 'lucide-react';
 
 const API_URL = 'http://localhost:8000/api';
 
@@ -18,6 +19,7 @@ const GigDetail: React.FC = () => {
   const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [existingApplication, setExistingApplication] = useState<any>(null);
+  const [showIneligibleModal, setShowIneligibleModal] = useState(false);
   const [formData, setFormData] = useState({ student_name: '', student_email: '', student_year: '', student_cgpa: '', resume_link: '', cover_letter: '' });
 
   useEffect(() => { if (!studentId) { navigate('/student/login'); return; } loadPageData(); }, [id, studentId]);
@@ -43,11 +45,34 @@ const GigDetail: React.FC = () => {
   };
 
   const fetchStudentData = async () => {
-    try { const r = await axios.get(`${API_URL}/students/${studentId}`); setFormData(prev => ({ ...prev, student_name: r.data.name, student_email: r.data.email, student_year: r.data.year.toString(), resume_link: r.data.resume_url || '' })); } catch {}
+    try { const r = await axios.get(`${API_URL}/students/${studentId}`); setFormData(prev => ({ ...prev, student_name: r.data.name, student_email: r.data.email, student_year: r.data.year.toString(), student_cgpa: r.data.cgpa?.toString() || '', resume_link: r.data.resume_url || '' })); } catch {}
+  };
+
+  // Parse CGPA requirement (e.g., "7.5 and above" → 7.5)
+  const parseCgpaRequirement = (requirement: string): number | null => {
+    if (!requirement) return null;
+    const match = requirement.match(/(\d+\.?\d*)/);
+    return match ? parseFloat(match[1]) : null;
+  };
+
+  // Check if student is eligible based on CGPA
+  const isEligible = (): boolean => {
+    if (!gig?.cgpa_requirement || !formData.student_cgpa) return true;
+    const requiredCgpa = parseCgpaRequirement(gig.cgpa_requirement);
+    const studentCgpa = parseFloat(formData.student_cgpa);
+    if (requiredCgpa === null) return true;
+    return studentCgpa >= requiredCgpa;
   };
 
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check CGPA eligibility
+    if (!isEligible()) {
+      setShowIneligibleModal(true);
+      return;
+    }
+    
     setApplying(true);
     try {
       const response = await axios.post(`${API_URL}/applications`, { gig_id: id, student_id: studentId, ...formData });
@@ -114,7 +139,15 @@ const GigDetail: React.FC = () => {
             <h3 className="font-bold text-foreground mb-3">Eligibility ✅</h3>
             <div className="grid grid-cols-2 gap-4">
               {gig.year_requirement && <div className="bg-primary/5 p-4 rounded-xl"><p className="text-sm font-semibold text-primary mb-1">Year</p><p className="text-foreground">{gig.year_requirement}</p></div>}
-              {gig.cgpa_requirement && <div className="bg-primary/5 p-4 rounded-xl"><p className="text-sm font-semibold text-primary mb-1">CGPA</p><p className="text-foreground">{gig.cgpa_requirement}</p></div>}
+              {gig.cgpa_requirement && (
+                <div className={`p-4 rounded-xl ${isEligible() ? 'bg-primary/5' : 'bg-destructive/10 border border-destructive/30'}`}>
+                  <p className={`text-sm font-semibold mb-1 ${isEligible() ? 'text-primary' : 'text-destructive'}`}>CGPA</p>
+                  <p className="text-foreground">{gig.cgpa_requirement}</p>
+                  {!isEligible() && formData.student_cgpa && (
+                    <p className="text-xs text-destructive mt-2">Your CGPA: {formData.student_cgpa} (Below requirement)</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -157,6 +190,48 @@ const GigDetail: React.FC = () => {
           </>
         )}
       </motion.div>
+
+      {/* Ineligibility Modal */}
+      {showIneligibleModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-card rounded-2xl shadow-2xl p-8 max-w-sm w-full border border-border"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-destructive/15 rounded-full flex items-center justify-center">
+                <span className="text-2xl">❌</span>
+              </div>
+              <button
+                onClick={() => setShowIneligibleModal(false)}
+                className="text-muted-foreground hover:text-foreground transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <h2 className="text-2xl font-extrabold text-card-foreground mb-3">Not Eligible</h2>
+            <p className="text-muted-foreground mb-6">
+              Sorry, you don't meet the CGPA requirement for this gig.
+            </p>
+
+            <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-4 mb-6">
+              <p className="text-sm text-muted-foreground mb-2">CGPA Requirement</p>
+              <p className="text-lg font-bold text-destructive">{gig?.cgpa_requirement}</p>
+              <p className="text-sm text-muted-foreground mt-2">Your CGPA: <span className="font-semibold">{formData.student_cgpa}</span></p>
+            </div>
+
+            <button
+              onClick={() => setShowIneligibleModal(false)}
+              className="w-full py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary-glow shadow-glow font-bold transition-all"
+            >
+              Explore Other Gigs
+            </button>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

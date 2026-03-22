@@ -78,7 +78,7 @@ const EditGig: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div><label className={labelClass}>Year Requirement</label><input type="text" name="year_requirement" value={formData.year_requirement} onChange={handleInputChange} className={inputClass} /></div>
-          <div><label className={labelClass}>CGPA Requirement</label><input type="text" name="cgpa_requirement" value={formData.cgpa_requirement} onChange={handleInputChange} className={inputClass} /></div>
+          <div><label className={labelClass}>CGPA Requirement (0-10 scale)</label><input type="text" name="cgpa_requirement" value={formData.cgpa_requirement} onChange={handleInputChange} className={inputClass} placeholder="e.g., 7.5 and above" /></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

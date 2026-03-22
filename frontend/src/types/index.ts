@@ -10,6 +10,21 @@ export interface Professor {
   previous_publications?: string;
 }
 
+export interface Student {
+  id: string;
+  name: string;
+  email: string;
+  reg_no: string;
+  department: string;
+  year: number;
+  cgpa: number;
+  college_name?: string;
+  skills?: string[];
+  resume_url?: string;
+  bio?: string;
+  id_card_image?: string;
+}
+
 export interface Gig {
   id: string;
   professor_id: string;
