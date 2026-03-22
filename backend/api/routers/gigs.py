@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from bson import ObjectId
 from core.database import gigs_collection
 from schemas.gig import GigCreate, GigUpdate, GigClose, GigHold, GigResponse
+from .notifications import create_gig_lifecycle_notifications
 
 router = APIRouter()
 
@@ -123,6 +124,7 @@ async def close_gig(gig_id: str, close_data: GigClose):
     
     gig = await gigs_collection.find_one({"_id": ObjectId(gig_id)})
     gig["id"] = str(gig["_id"])
+    await create_gig_lifecycle_notifications(gig_id=gig_id, gig_title=gig.get("title", "Gig"), lifecycle="closed")
     return gig
 
 
@@ -148,6 +150,12 @@ async def put_gig_on_hold(gig_id: str, hold_data: GigHold):
     
     gig = await gigs_collection.find_one({"_id": ObjectId(gig_id)})
     gig["id"] = str(gig["_id"])
+    await create_gig_lifecycle_notifications(
+        gig_id=gig_id,
+        gig_title=gig.get("title", "Gig"),
+        lifecycle="on-hold",
+        paused_reason=hold_data.paused_reason,
+    )
     return gig
 
 
@@ -173,6 +181,7 @@ async def activate_gig(gig_id: str):
     
     gig = await gigs_collection.find_one({"_id": ObjectId(gig_id)})
     gig["id"] = str(gig["_id"])
+    await create_gig_lifecycle_notifications(gig_id=gig_id, gig_title=gig.get("title", "Gig"), lifecycle="reactivated")
     return gig
 
 
@@ -185,12 +194,20 @@ async def delete_gig(gig_id: str):
             detail="Invalid gig ID"
         )
     
-    result = await gigs_collection.delete_one({"_id": ObjectId(gig_id)})
-    
-    if result.deleted_count == 0:
+    existing_gig = await gigs_collection.find_one({"_id": ObjectId(gig_id)})
+    if not existing_gig:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Gig not found"
+        )
+
+    result = await gigs_collection.delete_one({"_id": ObjectId(gig_id)})
+
+    if result.deleted_count > 0:
+        await create_gig_lifecycle_notifications(
+            gig_id=gig_id,
+            gig_title=existing_gig.get("title", "Gig"),
+            lifecycle="cancelled",
         )
     
     return None

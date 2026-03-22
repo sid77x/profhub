@@ -35,6 +35,7 @@ def student_doc_to_response(doc) -> dict:
         "year": doc["year"],
         "cgpa": doc.get("cgpa"),
         "college_name": doc.get("college_name"),
+        "previous_publications": doc.get("previous_publications"),
         "skills": doc.get("skills", []),
         "resume_url": doc.get("resume_url"),
         "bio": doc.get("bio"),

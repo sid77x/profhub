@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from bson import ObjectId
-from typing import List
-from core.database import notifications_collection
+from typing import List, Optional
+from core.database import notifications_collection, applications_collection
 from schemas.notification import NotificationCreate, NotificationResponse
 
 router = APIRouter()
@@ -177,3 +177,65 @@ async def create_application_status_notification(
         return  # Don't create notification for pending status
     
     await notifications_collection.insert_one(notification)
+
+
+async def create_gig_lifecycle_notifications(
+    gig_id: str,
+    gig_title: str,
+    lifecycle: str,
+    paused_reason: Optional[str] = None,
+):
+    """Notify all applicants when a gig is put on hold, reactivated, or cancelled/closed."""
+    from datetime import datetime
+
+    if lifecycle == "on-hold":
+        title = "Gig Put On Hold"
+        msg = f"The gig '{gig_title}' has been put on hold."
+        if paused_reason:
+            msg += f" Reason: {paused_reason}"
+        ntype = "warning"
+        ncode = "gig_on_hold"
+    elif lifecycle == "reactivated":
+        title = "Gig Reactivated"
+        msg = f"The gig '{gig_title}' is active again and accepting progress/applications."
+        ntype = "success"
+        ncode = "gig_reactivated"
+    elif lifecycle in ["closed", "cancelled"]:
+        title = "Gig Cancelled"
+        msg = f"The gig '{gig_title}' has been cancelled/closed by the professor."
+        ntype = "warning"
+        ncode = "gig_cancelled"
+    else:
+        return
+
+    applicant_ids: set[str] = set()
+    async for app in applications_collection.find({"gig_id": gig_id}):
+        sid = app.get("student_id")
+        if sid:
+            applicant_ids.add(sid)
+
+    if not applicant_ids:
+        return
+
+    docs = []
+    for student_id in applicant_ids:
+        docs.append(
+            {
+                "user_id": student_id,
+                "user_type": "student",
+                "title": title,
+                "message": msg,
+                "type": ntype,
+                "read": False,
+                "link": "/student/applications",
+                "metadata": {
+                    "gig_id": gig_id,
+                    "notification_type": ncode,
+                    "gig_status": lifecycle,
+                },
+                "created_at": datetime.utcnow(),
+            }
+        )
+
+    if docs:
+        await notifications_collection.insert_many(docs)

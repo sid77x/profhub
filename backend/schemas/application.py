@@ -8,6 +8,7 @@ class ApplicationBase(BaseModel):
     student_email: EmailStr
     student_year: Optional[str] = None
     student_cgpa: Optional[str] = None
+    student_previous_publications: Optional[str] = None
     resume_link: str
     cover_letter: Optional[str] = None
 

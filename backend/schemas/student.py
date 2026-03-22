@@ -7,12 +7,15 @@ class StudentBase(BaseModel):
     email: EmailStr
     reg_no: str
     department: str
-    year: int
-    cgpa: float
+    year: Optional[int] = None
+    cgpa: Optional[float] = None
     college_name: Optional[str] = None
+    previous_publications: Optional[str] = None
 
 
 class StudentCreate(StudentBase):
+    year: int
+    cgpa: float
     password: str
     id_card_image: Optional[str] = None  # Base64 encoded image
 
@@ -26,6 +29,7 @@ class StudentUpdate(BaseModel):
     skills: Optional[List[str]] = None
     resume_url: Optional[str] = None
     bio: Optional[str] = None
+    previous_publications: Optional[str] = None
     id_card_image: Optional[str] = None  # Base64 encoded image
 
 
@@ -39,7 +43,7 @@ class StudentResponse(StudentBase):
     skills: List[str] = []
     resume_url: Optional[str] = None
     bio: Optional[str] = None
-    cgpa: float
+    cgpa: Optional[float] = None
     id_card_image: Optional[str] = None
 
     class Config:

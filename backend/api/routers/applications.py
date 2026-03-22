@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, status
 from bson import ObjectId
-from core.database import applications_collection, gigs_collection
+from core.database import applications_collection, gigs_collection, database
 from schemas.application import ApplicationCreate, ApplicationResponse
 from .notifications import create_or_update_application_notification, create_application_status_notification
 
 router = APIRouter()
+students_collection = database["students"]
 
 
 @router.post("/applications", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED)
@@ -13,6 +14,13 @@ async def create_application(application: ApplicationCreate):
     from datetime import datetime
     
     application_dict = application.model_dump()
+    if not application_dict.get("student_previous_publications") and application_dict.get("student_id"):
+        try:
+            student_doc = await students_collection.find_one({"_id": ObjectId(application_dict["student_id"])})
+            if student_doc:
+                application_dict["student_previous_publications"] = student_doc.get("previous_publications")
+        except Exception:
+            pass
     application_dict["status"] = "pending"
     application_dict["applied_at"] = datetime.utcnow()
     
@@ -40,6 +48,13 @@ async def get_gig_applications(gig_id: str):
     """Get all applications for a specific gig"""
     applications = []
     async for application in applications_collection.find({"gig_id": gig_id}):
+        if not application.get("student_previous_publications") and application.get("student_id"):
+            try:
+                student_doc = await students_collection.find_one({"_id": ObjectId(application["student_id"])})
+                if student_doc and student_doc.get("previous_publications"):
+                    application["student_previous_publications"] = student_doc.get("previous_publications")
+            except Exception:
+                pass
         application["id"] = str(application["_id"])
         applications.append(application)
     return applications
