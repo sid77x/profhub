@@ -22,7 +22,7 @@ const StudentLogin: React.FC = () => {
     try {
       const response = await axios.post(`${API_URL}/students/login`, formData);
       setAuth(response.data.access_token, response.data.student_id, 'student');
-      toast.success('Welcome back! 🎉');
+      toast.success('Welcome back!');
       navigate('/student/dashboard');
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Login failed');
@@ -51,11 +51,11 @@ const StudentLogin: React.FC = () => {
       >
         <div className="flex items-center justify-center mb-6">
           <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center shadow-glow">
-            <span className="text-2xl">🎓</span>
+            <span className="text-2xl"></span>
           </div>
         </div>
         <h1 className="text-center text-3xl font-extrabold gradient-text mb-2">ResearchConnect</h1>
-        <h2 className="text-center text-xl font-bold text-foreground mb-1">Welcome back, Student! 👋</h2>
+        <h2 className="text-center text-xl font-bold text-foreground mb-1">Welcome back, Student!</h2>
         <p className="text-center text-sm text-muted-foreground">
           Don't have an account?{' '}
           <button onClick={() => navigate('/student/register')} className="font-semibold text-secondary hover:opacity-80 transition-colors">
@@ -132,7 +132,7 @@ const StudentLogin: React.FC = () => {
             >
               {loading ? (
                 <><div className="animate-spin rounded-full h-4 w-4 border-2 border-secondary-foreground border-t-transparent" /> Signing in...</>
-              ) : 'Sign in →'}
+              ) : 'Sign in'}
             </button>
           </form>
         </div>

@@ -20,9 +20,9 @@ const StudentLayout: React.FC = () => {
   }, [studentId, fetchStudent]);
 
   const navItems = [
-    { path: '/student/dashboard', label: 'Dashboard', emoji: '🏠' },
-    { path: '/student/gigs', label: 'Browse Gigs', emoji: '🔍' },
-    { path: '/student/profile', label: 'My Profile', emoji: '👤' },
+    { path: '/student/dashboard', label: 'Dashboard' },
+    { path: '/student/gigs', label: 'Browse Gigs' },
+    { path: '/student/profile', label: 'My Profile' },
   ];
 
   const handleSignOut = () => {
@@ -53,7 +53,6 @@ const StudentLayout: React.FC = () => {
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     }`}
                   >
-                    <span className="mr-1.5">{item.emoji}</span>
                     {item.label}
                   </Link>
                 ))}
@@ -135,7 +134,7 @@ const StudentLayout: React.FC = () => {
                         : 'text-muted-foreground hover:bg-muted'
                     }`}
                   >
-                    <span className="mr-2">{item.emoji}</span>{item.label}
+                    {item.label}
                   </Link>
                 ))}
                 <button

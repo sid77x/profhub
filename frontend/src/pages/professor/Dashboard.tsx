@@ -17,16 +17,16 @@ const Dashboard: React.FC = () => {
   const onHoldGigs = gigs.filter((g) => g.status === 'on-hold').length;
 
   const cards = [
-    { label: 'Open Projects', count: openGigs, icon: Briefcase, emoji: '🔓', gradient: 'from-primary to-primary-glow', sub: 'Active' },
-    { label: 'Closed Projects', count: closedGigs, icon: CheckCircle, emoji: '✅', gradient: 'from-success to-success/80', sub: 'Completed' },
-    { label: 'On Hold', count: onHoldGigs, icon: Pause, emoji: '⏸️', gradient: 'from-warning to-warning/80', sub: 'Paused' },
+    { label: 'Open Projects', count: openGigs, icon: Briefcase, gradient: 'from-primary to-primary-glow', sub: 'Active' },
+    { label: 'Closed Projects', count: closedGigs, icon: CheckCircle, gradient: 'from-success to-success/80', sub: 'Completed' },
+    { label: 'On Hold', count: onHoldGigs, icon: Pause, gradient: 'from-warning to-warning/80', sub: 'Paused' },
   ];
 
   return (
     <div className="max-w-7xl mx-auto">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-4xl font-extrabold text-foreground mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">Overview of your research opportunities 📊</p>
+        <p className="text-muted-foreground">Overview of your research opportunities</p>
       </motion.div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-10">
@@ -41,7 +41,7 @@ const Dashboard: React.FC = () => {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold opacity-90">{card.label}</h3>
-              <span className="text-2xl">{card.emoji}</span>
+                    {/* icon placeholder removed (no emojis) */}
             </div>
             <p className="text-4xl font-extrabold">{card.count}</p>
             <div className="mt-3 flex items-center text-sm opacity-80">
@@ -63,7 +63,7 @@ const Dashboard: React.FC = () => {
           <div className="text-center py-12">
             <BookOpen className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
             <p className="text-lg text-muted-foreground font-semibold">No gigs yet</p>
-            <p className="text-muted-foreground/70 mt-2">Create your first research gig to get started! 🚀</p>
+            <p className="text-muted-foreground/70 mt-2">Create your first research gig to get started!</p>
           </div>
         ) : (
           <div className="space-y-3">

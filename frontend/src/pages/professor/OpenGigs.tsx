@@ -32,7 +32,7 @@ const OpenGigs: React.FC = () => {
     <div className="max-w-7xl mx-auto">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-4xl font-extrabold text-foreground mb-2">Open Gigs 🔓</h1>
+          <h1 className="text-4xl font-extrabold text-foreground mb-2">Open Gigs</h1>
           <p className="text-muted-foreground">Manage your active research opportunities</p>
         </div>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate('/professor/gigs/create')}
@@ -51,7 +51,7 @@ const OpenGigs: React.FC = () => {
           className="bg-card rounded-2xl shadow-lg p-16 text-center border border-border">
           <BookOpen className="w-20 h-20 mx-auto text-muted-foreground/30 mb-6" />
           <h3 className="text-2xl font-bold text-foreground mb-3">No open gigs found</h3>
-          <p className="text-muted-foreground mb-6">Get started by creating your first research opportunity 🚀</p>
+          <p className="text-muted-foreground mb-6">Get started by creating your first research opportunity</p>
         </motion.div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -83,7 +83,7 @@ const OpenGigs: React.FC = () => {
                   <motion.button whileHover={{ x: 2 }} onClick={() => navigate(`/professor/gigs/${gig.id}/applications`)}
                     className="flex items-center gap-3 text-sm w-full bg-info/5 hover:bg-info/10 p-2.5 rounded-xl transition-colors group">
                     <div className="bg-info p-2 rounded-lg"><Users className="w-4 h-4 text-info-foreground" /></div>
-                    <div className="text-left"><p className="text-xs text-muted-foreground font-medium">Applications</p><p className="font-bold text-info group-hover:underline text-sm">View All →</p></div>
+                    <div className="text-left"><p className="text-xs text-muted-foreground font-medium">Applications</p><p className="font-bold text-info group-hover:underline text-sm">View All</p></div>
                   </motion.button>
                 </div>
 
@@ -114,7 +114,7 @@ const OpenGigs: React.FC = () => {
               onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-lg w-full shadow-xl border border-border">
               <div className="flex items-center gap-4 mb-6">
                 <div className="bg-success/15 p-4 rounded-2xl"><CheckCircle className="w-7 h-7 text-success" /></div>
-                <div><h3 className="text-2xl font-bold text-card-foreground">Close Gig ✅</h3><p className="text-muted-foreground text-sm">Provide publication details</p></div>
+                <div><h3 className="text-2xl font-bold text-card-foreground">Close Gig</h3><p className="text-muted-foreground text-sm">Provide publication details</p></div>
               </div>
               <div className="space-y-4">
                 <div><label className="block text-sm font-bold text-foreground mb-2">Publication Venue</label><input type="text" value={closeData.publication_venue} onChange={(e) => setCloseData({ ...closeData, publication_venue: e.target.value })} className={inputClass} placeholder="e.g., IEEE Conference 2024" /></div>
@@ -138,7 +138,7 @@ const OpenGigs: React.FC = () => {
               onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-lg w-full shadow-xl border border-border">
               <div className="flex items-center gap-4 mb-6">
                 <div className="bg-warning/15 p-4 rounded-2xl"><Pause className="w-7 h-7 text-warning" /></div>
-                <div><h3 className="text-2xl font-bold text-card-foreground">Put On Hold ⏸️</h3><p className="text-muted-foreground text-sm">Provide a reason for pausing</p></div>
+                <div><h3 className="text-2xl font-bold text-card-foreground">Put On Hold</h3><p className="text-muted-foreground text-sm">Provide a reason for pausing</p></div>
               </div>
               <div><label className="block text-sm font-bold text-foreground mb-2">Reason</label><textarea value={holdReason} onChange={(e) => setHoldReason(e.target.value)} rows={4} className={`${inputClass} resize-none`} placeholder="Why is this gig being put on hold?" required /></div>
               <div className="flex gap-3 mt-6">

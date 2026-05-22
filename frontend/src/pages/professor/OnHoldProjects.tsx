@@ -18,7 +18,7 @@ const OnHoldProjects: React.FC = () => {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-        <h1 className="text-3xl font-extrabold text-foreground">On Hold Projects ⏸️</h1>
+        <h1 className="text-3xl font-extrabold text-foreground">On Hold Projects</h1>
         <p className="mt-2 text-muted-foreground">Projects that are temporarily paused</p>
       </motion.div>
 
@@ -45,9 +45,9 @@ const OnHoldProjects: React.FC = () => {
                     </div>
                     {gig.paused_reason && (
                       <div className="mt-4 p-4 bg-warning/10 rounded-xl">
-                        <h3 className="font-semibold text-warning">⚠️ Reason for Hold</h3>
-                        <p className="text-sm text-foreground mt-1">{gig.paused_reason}</p>
-                      </div>
+                          <h3 className="font-semibold text-warning">Reason for Hold</h3>
+                          <p className="text-sm text-foreground mt-1">{gig.paused_reason}</p>
+                        </div>
                     )}
                   </div>
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}

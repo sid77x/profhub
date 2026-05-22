@@ -36,7 +36,7 @@ const NotificationPanel: React.FC = () => {
 
   const markAllAsRead = async () => {
     if (!userId) return;
-    try { await notificationAPI.markAllAsRead(userId); setNotifications(prev => prev.map(n => ({ ...n, read: true }))); toast.success('All marked as read ✓'); }
+    try { await notificationAPI.markAllAsRead(userId); setNotifications(prev => prev.map(n => ({ ...n, read: true }))); toast.success('All marked as read'); }
     catch { toast.error('Failed'); }
   };
 
@@ -73,7 +73,7 @@ const NotificationPanel: React.FC = () => {
             <motion.div initial={{ opacity: 0, y: -4, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -4, scale: 0.95 }}
               className="absolute right-0 mt-2 w-96 bg-card rounded-xl shadow-xl border border-border z-20 max-h-[500px] overflow-hidden flex flex-col">
               <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                <h3 className="text-lg font-bold text-card-foreground">Notifications 🔔</h3>
+                <h3 className="text-lg font-bold text-card-foreground">Notifications</h3>
                 {unreadCount > 0 && <button onClick={markAllAsRead} className="text-xs text-primary hover:text-primary-glow font-semibold">Mark all read</button>}
               </div>
 

@@ -52,7 +52,7 @@ const Login: React.FC = () => {
           </div>
         </div>
         <h1 className="text-center text-3xl font-extrabold gradient-text mb-2">ResearchConnect</h1>
-        <h2 className="text-center text-xl font-bold text-foreground mb-1">Welcome back, Professor! 👋</h2>
+        <h2 className="text-center text-xl font-bold text-foreground mb-1">Welcome back, Professor!</h2>
         <p className="text-center text-sm text-muted-foreground">
           Don't have an account?{' '}
           <button onClick={() => navigate('/register')} className="font-semibold text-primary hover:text-primary-glow transition-colors">
@@ -79,7 +79,7 @@ const Login: React.FC = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 flex items-center gap-3"
               >
-                <span className="text-destructive text-lg">⚠️</span>
+                <span className="text-destructive text-lg">!</span>
                 <p className="text-sm text-destructive font-medium">{error}</p>
               </motion.div>
             )}
@@ -139,7 +139,7 @@ const Login: React.FC = () => {
             >
               {loading ? (
                 <><div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent" /> Signing in...</>
-              ) : 'Sign in →'}
+              ) : 'Sign in'}
             </button>
           </form>
         </div>

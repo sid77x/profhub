@@ -62,7 +62,7 @@ const ViewGigApplications: React.FC = () => {
           <div className="text-center py-12">
             <FileText className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
             <p className="text-xl text-muted-foreground font-semibold">No applications yet</p>
-            <p className="text-muted-foreground/70 mt-2">Check back later for student applications 📬</p>
+            <p className="text-muted-foreground/70 mt-2">Check back later for student applications</p>
           </div>
         ) : (
           <div className="space-y-5">

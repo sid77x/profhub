@@ -43,7 +43,7 @@ const Profile: React.FC = () => {
   return (
     <div>
       <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-3xl font-extrabold text-foreground">Professor Profile 👨‍🏫</h1>
+        <h1 className="text-3xl font-extrabold text-foreground">Professor Profile</h1>
         <button onClick={() => setIsEditing(!isEditing)}
           className={`px-5 py-2 rounded-xl font-semibold text-sm transition-all ${isEditing ? 'bg-muted text-foreground hover:bg-muted/80' : 'bg-primary text-primary-foreground hover:bg-primary-glow shadow-glow'}`}>
           {isEditing ? 'Cancel' : 'Edit Profile'}
@@ -81,7 +81,7 @@ const Profile: React.FC = () => {
           </div>
 
           <button type="submit" className="w-full py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:bg-primary-glow shadow-glow transition-all">
-            Save Changes ✨
+            Save Changes
           </button>
         </motion.form>
       ) : (

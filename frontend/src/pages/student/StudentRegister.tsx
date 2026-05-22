@@ -30,7 +30,7 @@ const StudentRegister: React.FC = () => {
     setLoading(true);
     try {
       await axios.post(`${API_URL}/students/register`, { ...formData, year: parseInt(formData.year), cgpa: parseFloat(formData.cgpa), id_card_image: idCardImage });
-      toast.success('Registration successful! 🎉');
+      toast.success('Registration successful!');
       const loginResponse = await axios.post(`${API_URL}/students/login`, { email: formData.email, password: formData.password });
       setAuth(loginResponse.data.access_token, loginResponse.data.student_id, 'student');
       navigate('/student/dashboard');
@@ -85,7 +85,7 @@ const StudentRegister: React.FC = () => {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center shadow-glow">
-              <span className="text-2xl">🚀</span>
+              <span className="text-2xl"></span>
             </div>
           </div>
           <h1 className="text-3xl font-extrabold text-foreground mb-2">Student Registration</h1>
@@ -144,7 +144,7 @@ const StudentRegister: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-1.5">ID Card Photo 📸 (Required)</label>
+            <label className="block text-sm font-semibold text-foreground mb-1.5">ID Card Photo (Required)</label>
             <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer bg-muted/50">
               <input
                 type="file"
@@ -161,7 +161,7 @@ const StudentRegister: React.FC = () => {
                   </div>
                 ) : (
                   <div>
-                    <p className="text-3xl mb-2">📷</p>
+                    <p className="text-3xl mb-2"></p>
                     <p className="text-sm font-semibold text-foreground">Click to upload ID card photo</p>
                     <p className="text-xs text-muted-foreground mt-1">Max 5MB • JPG, PNG, GIF</p>
                   </div>
@@ -173,7 +173,7 @@ const StudentRegister: React.FC = () => {
 
           <button type="submit" disabled={loading}
             className="w-full py-3 rounded-xl text-sm font-bold text-secondary-foreground bg-secondary hover:opacity-90 shadow-lg disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-2">
-            {loading ? <><div className="animate-spin rounded-full h-4 w-4 border-2 border-secondary-foreground border-t-transparent" /> Creating account...</> : 'Create Account →'}
+            {loading ? <><div className="animate-spin rounded-full h-4 w-4 border-2 border-secondary-foreground border-t-transparent" /> Creating account...</> : 'Create Account'}
           </button>
         </form>
 

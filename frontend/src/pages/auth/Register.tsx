@@ -46,7 +46,7 @@ const Register: React.FC = () => {
           </div>
         </div>
         <h1 className="text-center text-3xl font-extrabold gradient-text mb-2">Join ResearchConnect</h1>
-        <h2 className="text-center text-lg font-semibold text-foreground mb-1">Create your professor account 🎓</h2>
+        <h2 className="text-center text-lg font-semibold text-foreground mb-1">Create your professor account</h2>
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{' '}
           <button onClick={() => navigate('/login')} className="font-semibold text-primary hover:text-primary-glow">Sign in</button>
@@ -60,7 +60,7 @@ const Register: React.FC = () => {
           <form className="space-y-4" onSubmit={handleSubmit}>
             {error && (
               <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 flex items-center gap-3">
-                <span className="text-destructive text-lg">⚠️</span>
+                <span className="text-destructive text-lg">!</span>
                 <p className="text-sm text-destructive font-medium">{error}</p>
               </div>
             )}
@@ -102,7 +102,7 @@ const Register: React.FC = () => {
             </div>
 
             <button type="submit" disabled={loading} className="w-full py-2.5 px-4 rounded-xl text-sm font-bold text-primary-foreground bg-primary hover:bg-primary-glow shadow-glow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2">
-              {loading ? <><div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent" /> Creating Account...</> : 'Create Account →'}
+              {loading ? <><div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent" /> Creating Account...</> : 'Create Account'}
             </button>
           </form>
         </div>

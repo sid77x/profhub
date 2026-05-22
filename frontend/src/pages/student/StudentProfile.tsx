@@ -62,7 +62,7 @@ const StudentProfile: React.FC = () => {
       if (formData.id_card_image !== student?.id_card_image) updateData.id_card_image = formData.id_card_image;
       if (!Object.keys(updateData).length) { toast.error('No changes'); setIsEditing(false); return; }
       await updateStudent(studentId, updateData);
-      toast.success('Profile updated! ✨');
+      toast.success('Profile updated!');
       setIsEditing(false);
     } catch (error: any) { toast.error(error.response?.data?.detail || 'Failed to update'); }
     finally { setLoading(false); }
@@ -160,7 +160,7 @@ const StudentProfile: React.FC = () => {
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-foreground mb-1.5">ID Card Photo 📸</label>
+            <label className="block text-sm font-semibold text-foreground mb-1.5">ID Card Photo</label>
             {formData.id_card_image ? (
               <div className="space-y-3">
                 <div className="border-2 border-border rounded-xl overflow-hidden bg-muted">
@@ -192,7 +192,7 @@ const StudentProfile: React.FC = () => {
                     id="id-card-upload-input"
                   />
                   <label htmlFor="id-card-upload-input" className="cursor-pointer block">
-                    <p className="text-3xl mb-2">📷</p>
+                    {/* image placeholder removed */}
                     <p className="text-sm font-semibold text-foreground">Click to upload ID card photo</p>
                     <p className="text-xs text-muted-foreground mt-1">Max 5MB • JPG, PNG, GIF</p>
                   </label>
@@ -203,7 +203,7 @@ const StudentProfile: React.FC = () => {
 
           {isEditing && (
             <button type="submit" disabled={loading} className="w-full py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary-glow shadow-glow font-bold disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-              <Save className="w-5 h-5" /> {loading ? 'Saving...' : 'Save Changes ✨'}
+              <Save className="w-5 h-5" /> {loading ? 'Saving...' : 'Save Changes'}
             </button>
           )}
         </form>

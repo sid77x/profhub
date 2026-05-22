@@ -48,7 +48,7 @@ const EditGig: React.FC = () => {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-        <h1 className="text-3xl font-extrabold text-foreground">Edit Gig ✏️</h1>
+        <h1 className="text-3xl font-extrabold text-foreground">Edit Gig</h1>
         <p className="mt-2 text-muted-foreground">Update the details for your research project</p>
       </motion.div>
 
@@ -85,13 +85,13 @@ const EditGig: React.FC = () => {
           <div><label className={labelClass}>Candidates</label><input type="number" name="candidate_count" value={formData.candidate_count} onChange={handleInputChange} min="1" className={inputClass} /></div>
           <div className="flex items-center pt-8">
             <input type="checkbox" id="funded" name="funded" checked={formData.funded} onChange={handleInputChange} className="h-5 w-5 text-primary focus:ring-ring border-input rounded" />
-            <label htmlFor="funded" className="ml-3 text-sm font-medium text-foreground">💰 Funded project</label>
+            <label htmlFor="funded" className="ml-3 text-sm font-medium text-foreground">Funded project</label>
           </div>
         </div>
 
         <div className="flex gap-4">
           <button type="submit" disabled={loading} className="flex-1 py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:bg-primary-glow shadow-glow disabled:opacity-50 transition-all">
-            {loading ? 'Updating...' : 'Update Gig ✨'}
+            {loading ? 'Updating...' : 'Update Gig'}
           </button>
           <button type="button" onClick={() => navigate('/professor/gigs/open')} className="flex-1 py-3 bg-muted text-foreground font-semibold rounded-xl hover:bg-muted/80 border border-border transition-all">Cancel</button>
         </div>

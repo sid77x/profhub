@@ -44,7 +44,7 @@ const BrowseGigs: React.FC = () => {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-        <h1 className="text-3xl font-extrabold text-foreground mb-4">Browse Gigs 🔍</h1>
+        <h1 className="text-3xl font-extrabold text-foreground mb-4">Browse Gigs</h1>
         <div className="relative">
           <Search className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground" />
           <input type="text" placeholder="Search gigs..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
@@ -56,7 +56,7 @@ const BrowseGigs: React.FC = () => {
         <div className="bg-card rounded-2xl shadow-lg p-12 text-center border border-border">
           <Briefcase className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-foreground mb-2">No gigs found</h3>
-          <p className="text-muted-foreground">Check back later for new opportunities 📬</p>
+          <p className="text-muted-foreground">Check back later for new opportunities</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5">
@@ -73,7 +73,7 @@ const BrowseGigs: React.FC = () => {
               )}
               <div className="flex items-start justify-between mb-3">
                 <h3 className="text-xl font-bold text-card-foreground">{gig.title}</h3>
-                {gig.funded && <span className="px-3 py-1 bg-success/15 text-success text-sm font-bold rounded-full">💰 Funded</span>}
+                {gig.funded && <span className="px-3 py-1 bg-success/15 text-success text-sm font-bold rounded-full">Funded</span>}
               </div>
               <p className="text-muted-foreground mb-4 line-clamp-2">{gig.description}</p>
               <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
@@ -84,7 +84,7 @@ const BrowseGigs: React.FC = () => {
               </div>
               <div className="flex justify-end">
                 <Link to={`/student/gigs/${gig.id}`} className="px-6 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary-glow shadow-glow font-semibold transition-all">
-                  View Details →
+                  View Details
                 </Link>
               </div>
             </motion.div>

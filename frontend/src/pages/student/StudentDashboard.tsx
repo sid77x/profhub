@@ -70,7 +70,7 @@ const StudentDashboard: React.FC = () => {
 
   const firstName = student?.name?.trim()?.split(/\s+/)?.[0] || 'Student';
   const metaBits = [
-    student?.department ? `📚 ${student.department}` : null,
+    student?.department ? student.department : null,
     student?.year ? `Year ${student.year}` : null,
     student?.cgpa !== null && student?.cgpa !== undefined ? `CGPA: ${student.cgpa}` : null,
   ].filter(Boolean) as string[];

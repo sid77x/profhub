@@ -2,7 +2,7 @@
 
 A comprehensive platform connecting professors with students for research collaboration opportunities. Professors can post research gigs, and students can browse and apply to opportunities that match their interests and qualifications.
 
-## 🚀 Features
+## Features
 
 ### For Professors
 - **Dashboard**: Overview of all research gigs (open, closed, on-hold)
@@ -18,14 +18,14 @@ A comprehensive platform connecting professors with students for research collab
 - **Track Applications**: Monitor status of submitted applications
 - **Profile Management**: Showcase skills, experience, and resume
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have the following installed:
 - **Python 3.8+** - [Download Python](https://www.python.org/downloads/)
 - **Node.js 16+** and npm - [Download Node.js](https://nodejs.org/)
 - **MongoDB 5.0+** - [Download MongoDB](https://www.mongodb.com/try/download/community)
 
-## 🛠️ Installation & Setup
+## Installation & Setup
 
 ### 1. Clone the Repository
 ```bash
@@ -108,7 +108,7 @@ npm run dev
 
 The application will be available at `http://localhost:5173`
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 ProfHub/
@@ -162,7 +162,7 @@ ProfHub/
     └── vite.config.ts        # Vite configuration
 ```
 
-## 💻 Tech Stack
+## Tech Stack
 
 ### Backend
 - **FastAPI** - Modern, fast web framework for building APIs
@@ -184,7 +184,7 @@ ProfHub/
 - **Lucide React** - Icon library
 - **React Hot Toast** - Toast notifications
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/professor/register` - Register new professor
@@ -215,7 +215,7 @@ ProfHub/
 - `GET /api/applications/gig/{gig_id}` - Get applications for a gig
 - `PATCH /api/applications/{id}/status` - Update application status
 
-## 🔒 Authentication
+## Authentication
 
 The application uses JWT (JSON Web Tokens) for authentication:
 - Passwords are hashed using bcrypt
@@ -223,7 +223,7 @@ The application uses JWT (JSON Web Tokens) for authentication:
 - Protected routes require valid authentication
 - Separate authentication flows for professors and students
 
-## ⚙️ Configuration
+## Configuration
 
 ### Backend Configuration (`backend/core/config.py`)
 ```python
@@ -250,7 +250,7 @@ The API base URL is set to `http://localhost:8000/api` in the frontend code.
    - Login with credentials
 
 3. **Create a Research Gig**:
-   - Go to Dashboard → Create Gig
+   - Go to Dashboard -> Create Gig
    - Fill in gig details (title, description, requirements)
    - Submit the gig
 
@@ -303,7 +303,7 @@ python -m venv venv
 # Activate and reinstall dependencies
 ```
 
-## 📝 Database Schema
+## Database Schema
 
 ### Collections
 - **professors**: Professor profiles and academic information
@@ -317,7 +317,7 @@ python -m venv venv
 - `professor_id` on gigs
 - `gig_id` and `student_id` on applications
 
-## 🚀 Deployment
+## Deployment
 
 ### Production Considerations
 - Set up environment variables for sensitive data
@@ -327,7 +327,7 @@ python -m venv venv
 - Use a process manager (PM2, systemd)
 - Set up proper logging and monitoring
 
-## 📄 License
+## License
 
 [Add your license here]
 

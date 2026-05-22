@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
           className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-card/50 backdrop-blur-sm border border-primary/20 mb-6 shadow-lg"
         >
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-            <span className="text-xl">🔬</span>
+            <GraduationCap className="w-6 h-6 text-white" />
           </div>
           <span className="text-2xl font-bold text-foreground">ResearchConnect</span>
         </motion.div>
@@ -64,7 +64,7 @@ const HomePage: React.FC = () => {
             Post research gigs, review applications, and find the perfect students for your projects.
           </p>
           <span className="text-primary font-semibold text-sm group-hover:translate-x-1 inline-block transition-transform">
-            Get started →
+            Get started
           </span>
         </motion.button>
 
@@ -85,7 +85,7 @@ const HomePage: React.FC = () => {
             Browse research opportunities, apply to exciting projects, and kickstart your academic career.
           </p>
           <span className="text-secondary font-semibold text-sm group-hover:translate-x-1 inline-block transition-transform">
-            Get started →
+            Get started
           </span>
         </motion.button>
       </div>
@@ -97,7 +97,7 @@ const HomePage: React.FC = () => {
         transition={{ delay: 0.6 }}
         className="mt-12 text-xs text-muted-foreground/60 relative z-10"
       >
-        Built for curious minds 🧠
+        Built for curious minds
       </motion.p>
     </div>
   );

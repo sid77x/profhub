@@ -22,14 +22,14 @@ const ProfessorLayout: React.FC = () => {
   }, [professorId, fetchProfile]);
 
   const navItems = [
-    { path: '/professor/dashboard', label: 'Dashboard', emoji: '📊' },
-    { path: '/professor/profile', label: 'Profile', emoji: '👤' },
+    { path: '/professor/dashboard', label: 'Dashboard' },
+    { path: '/professor/profile', label: 'Profile' },
   ];
 
   const gigItems = [
-    { path: '/professor/gigs/open', label: 'Open Gigs', emoji: '🔓' },
-    { path: '/professor/gigs/closed', label: 'Closed', emoji: '✅' },
-    { path: '/professor/gigs/hold', label: 'On Hold', emoji: '⏸️' },
+    { path: '/professor/gigs/open', label: 'Open Gigs' },
+    { path: '/professor/gigs/closed', label: 'Closed' },
+    { path: '/professor/gigs/hold', label: 'On Hold' },
   ];
 
   const isGigsActive = location.pathname.startsWith('/professor/gigs/');
@@ -62,7 +62,6 @@ const ProfessorLayout: React.FC = () => {
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     }`}
                   >
-                    <span className="mr-1.5">{item.emoji}</span>
                     {item.label}
                   </Link>
                 ))}
@@ -76,7 +75,6 @@ const ProfessorLayout: React.FC = () => {
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     }`}
                   >
-                    <span>🗂️</span>
                     <span>Gigs</span>
                     <ChevronDown className={`w-4 h-4 transition-transform ${showGigsDropdown ? 'rotate-180' : ''}`} />
                   </button>
@@ -100,7 +98,6 @@ const ProfessorLayout: React.FC = () => {
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                             }`}
                           >
-                            <span className="mr-2">{item.emoji}</span>
                             {item.label}
                           </Link>
                         ))}
@@ -197,7 +194,7 @@ const ProfessorLayout: React.FC = () => {
                     isGigsActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
                   }`}
                 >
-                  <span><span className="mr-2">🗂️</span>Gigs</span>
+                  <span>Gigs</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${mobileGigsOpen ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -224,7 +221,6 @@ const ProfessorLayout: React.FC = () => {
                                 : 'text-muted-foreground hover:bg-muted'
                             }`}
                           >
-                            <span className="mr-2">{item.emoji}</span>
                             {item.label}
                           </Link>
                         ))}

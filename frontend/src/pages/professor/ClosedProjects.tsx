@@ -14,7 +14,7 @@ const ClosedProjects: React.FC = () => {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-        <h1 className="text-3xl font-extrabold text-foreground">Closed Projects ✅</h1>
+        <h1 className="text-3xl font-extrabold text-foreground">Closed Projects</h1>
         <p className="mt-2 text-muted-foreground">Projects that have been completed and published</p>
       </motion.div>
 
@@ -39,7 +39,7 @@ const ClosedProjects: React.FC = () => {
                 </div>
                 {gig.publication_venue && (
                   <div className="mt-4 p-4 bg-success/10 rounded-xl">
-                    <h3 className="font-semibold text-success">📄 Publication Details</h3>
+                    <h3 className="font-semibold text-success">Publication Details</h3>
                     <p className="text-sm text-foreground mt-1"><span className="font-medium">Venue:</span> {gig.publication_venue}</p>
                     {gig.publication_link && (
                       <a href={gig.publication_link} target="_blank" rel="noopener noreferrer" className="text-sm text-info hover:underline mt-1 inline-flex items-center gap-1">

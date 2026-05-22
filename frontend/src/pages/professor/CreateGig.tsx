@@ -36,13 +36,13 @@ const CreateGig: React.FC = () => {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-        <h1 className="text-3xl font-extrabold text-foreground">Create New Gig 🆕</h1>
+        <h1 className="text-3xl font-extrabold text-foreground">Create New Gig</h1>
         <p className="mt-2 text-muted-foreground">Fill in the details for your research project</p>
       </motion.div>
 
       <motion.form initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-8 space-y-6 shadow-lg">
         <div>
-          <label className={labelClass}>Project Title *</label>
+            <label className={labelClass}>Project Title *</label>
           <input type="text" name="title" value={formData.title} onChange={handleInputChange} className={inputClass} placeholder="Enter a descriptive title" required />
         </div>
 
@@ -110,14 +110,14 @@ const CreateGig: React.FC = () => {
           </div>
           <div className="flex items-center pt-8">
             <input type="checkbox" id="funded" name="funded" checked={formData.funded} onChange={handleInputChange} className="h-5 w-5 text-primary focus:ring-ring border-input rounded" />
-            <label htmlFor="funded" className="ml-3 text-sm font-medium text-foreground">💰 This project is funded</label>
+            <label htmlFor="funded" className="ml-3 text-sm font-medium text-foreground">This project is funded</label>
           </div>
         </div>
 
         <div className="flex gap-4 pt-4">
-          <button type="submit" disabled={loading}
+            <button type="submit" disabled={loading}
             className="flex-1 py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:bg-primary-glow shadow-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-            {loading ? 'Creating...' : 'Create Gig 🚀'}
+            {loading ? 'Creating...' : 'Create Gig'}
           </button>
           <button type="button" onClick={() => navigate('/professor/gigs/open')}
             className="flex-1 py-3 bg-muted text-foreground font-semibold rounded-xl hover:bg-muted/80 border border-border transition-all">
