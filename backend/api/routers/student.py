@@ -1,10 +1,13 @@
 from fastapi import APIRouter, HTTPException, status
 from bson import ObjectId
-from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 import hashlib
 
-from core.database import database, professors_collection, gigs_collection, applications_collection
+from core.config import settings
+from core.database import database, gigs_collection, applications_collection, otp_collection
+from core.email import send_otp_email
+from core.otp import generate_otp, hash_otp
+from schemas.otp import OtpVerifyRequest, OtpSendResponse
 from schemas.student import StudentCreate, StudentResponse, StudentLogin, StudentUpdate
 from core.auth import create_access_token
 
@@ -43,37 +46,109 @@ def student_doc_to_response(doc) -> dict:
     }
 
 
-@router.post("/students/register", response_model=StudentResponse, status_code=status.HTTP_201_CREATED)
-async def register_student(student: StudentCreate):
-    """Register a new student"""
-    # Check if email already exists
+@router.post("/students/register", status_code=status.HTTP_400_BAD_REQUEST)
+async def register_student_deprecated():
+    """Deprecated: use OTP registration endpoints"""
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Use /api/students/register/request-otp and /api/students/register/verify-otp"
+    )
+
+
+@router.post("/students/register/request-otp", response_model=OtpSendResponse, status_code=status.HTTP_200_OK)
+async def request_student_register_otp(student: StudentCreate):
+    """Send OTP for student registration"""
     existing = await students_collection.find_one({"email": student.email})
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
-    # Check if reg_no already exists
+
     existing_reg = await students_collection.find_one({"reg_no": student.reg_no})
     if existing_reg:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Registration number already exists"
         )
-    
-    # Create student document
-    student_dict = student.model_dump(exclude={"password"})
-    student_dict["password"] = hash_password(student.password)
-    student_dict["skills"] = []
-    student_dict["resume_url"] = None
-    student_dict["bio"] = None
-    student_dict["id_card_image"] = student.id_card_image  # Store base64 image
-    student_dict["created_at"] = datetime.utcnow()
-    
-    result = await students_collection.insert_one(student_dict)
+
+    otp = generate_otp()
+    otp_doc = {
+        "email": student.email,
+        "user_type": "student",
+        "otp_hash": hash_otp(otp),
+        "attempts": 0,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(minutes=settings.otp_expiry_minutes),
+        "payload": {
+            **student.model_dump(exclude={"password"}),
+            "password": hash_password(student.password),
+            "skills": [],
+            "resume_url": None,
+            "bio": None,
+            "id_card_image": student.id_card_image,
+            "created_at": datetime.utcnow()
+        }
+    }
+
+    await otp_collection.delete_many({"email": student.email, "user_type": "student"})
+    await otp_collection.insert_one(otp_doc)
+
+    try:
+        send_otp_email(student.email, otp, "student", settings.otp_expiry_minutes)
+    except Exception as exc:
+        await otp_collection.delete_many({"email": student.email, "user_type": "student"})
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send OTP email: {exc}"
+        )
+
+    return {
+        "message": "OTP sent to email",
+        "expires_in_seconds": settings.otp_expiry_minutes * 60
+    }
+
+
+@router.post("/students/register/verify-otp", response_model=StudentResponse, status_code=status.HTTP_201_CREATED)
+async def verify_student_register_otp(request: OtpVerifyRequest):
+    """Verify OTP and create student account"""
+    otp_doc = await otp_collection.find_one({"email": request.email, "user_type": "student"})
+    if not otp_doc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP not found or expired"
+        )
+
+    if otp_doc.get("expires_at") and otp_doc["expires_at"] < datetime.utcnow():
+        await otp_collection.delete_many({"email": request.email, "user_type": "student"})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP expired"
+        )
+
+    if otp_doc.get("attempts", 0) >= settings.otp_max_attempts:
+        await otp_collection.delete_many({"email": request.email, "user_type": "student"})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP attempt limit exceeded"
+        )
+
+    if hash_otp(request.otp) != otp_doc.get("otp_hash"):
+        await otp_collection.update_one(
+            {"_id": otp_doc["_id"]},
+            {"$inc": {"attempts": 1}}
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP"
+        )
+
+    student_payload = otp_doc.get("payload", {})
+    result = await students_collection.insert_one(student_payload)
     created_doc = await students_collection.find_one({"_id": result.inserted_id})
-    
+
+    await otp_collection.delete_many({"email": request.email, "user_type": "student"})
+
     return student_doc_to_response(created_doc)
 
 

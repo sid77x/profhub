@@ -1,3 +1,4 @@
+
 """
 Clear all student accounts from MongoDB database
 """

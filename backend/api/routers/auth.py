@@ -1,45 +1,116 @@
 from fastapi import APIRouter, HTTPException, status
-from bson import ObjectId
-from core.database import professors_collection
+from core.config import settings
+from core.database import professors_collection, otp_collection
 from core.auth import verify_password, get_password_hash, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
-from schemas.auth import LoginRequest, RegisterRequest, Token
+from core.email import send_otp_email
+from core.otp import generate_otp, hash_otp
+from schemas.auth import LoginRequest, RegisterOtpRequest, Token
+from schemas.otp import OtpVerifyRequest, OtpSendResponse
 from schemas.professor import ProfessorResponse
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 router = APIRouter()
 
 
-@router.post("/register", response_model=ProfessorResponse, status_code=status.HTTP_201_CREATED)
-async def register(request: RegisterRequest):
-    """Register a new professor"""
-    # Check if email already exists
+@router.post("/register", status_code=status.HTTP_400_BAD_REQUEST)
+async def register_deprecated():
+    """Deprecated: use OTP registration endpoints"""
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Use /api/auth/register/request-otp and /api/auth/register/verify-otp"
+    )
+
+
+@router.post("/register/request-otp", response_model=OtpSendResponse)
+async def request_register_otp(request: RegisterOtpRequest):
+    """Send OTP for professor registration"""
     existing = await professors_collection.find_one({"email": request.email})
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
-    # Hash the password
-    hashed_password = get_password_hash(request.password)
-    
-    # Create new professor document
-    professor_dict = {
-        "name": request.name,
+
+    otp = generate_otp()
+    otp_doc = {
         "email": request.email,
-        "hashed_password": hashed_password,
-        "department": request.department,
-        "college_name": request.college_name,
-        "qualification": request.qualification,
-        "research_areas": request.research_areas,
-        "experience_years": request.experience_years,
-        "previous_publications": request.previous_publications,
+        "user_type": "professor",
+        "otp_hash": hash_otp(otp),
+        "attempts": 0,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(minutes=settings.otp_expiry_minutes),
+        "payload": {
+            "name": request.name,
+            "email": request.email,
+            "hashed_password": get_password_hash(request.password),
+            "department": request.department,
+            "college_name": request.college_name,
+            "qualification": request.qualification,
+            "research_areas": request.research_areas,
+            "experience_years": request.experience_years,
+            "previous_publications": request.previous_publications,
+        }
     }
-    
-    result = await professors_collection.insert_one(professor_dict)
+
+    await otp_collection.delete_many({"email": request.email, "user_type": "professor"})
+    await otp_collection.insert_one(otp_doc)
+
+    try:
+        send_otp_email(request.email, otp, "professor", settings.otp_expiry_minutes)
+    except Exception as exc:
+        await otp_collection.delete_many({"email": request.email, "user_type": "professor"})
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send OTP email: {exc}"
+        )
+
+    return {
+        "message": "OTP sent to email",
+        "expires_in_seconds": settings.otp_expiry_minutes * 60
+    }
+
+
+@router.post("/register/verify-otp", response_model=ProfessorResponse)
+async def verify_register_otp(request: OtpVerifyRequest):
+    """Verify OTP and create professor account"""
+    otp_doc = await otp_collection.find_one({"email": request.email, "user_type": "professor"})
+    if not otp_doc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP not found or expired"
+        )
+
+    if otp_doc.get("expires_at") and otp_doc["expires_at"] < datetime.utcnow():
+        await otp_collection.delete_many({"email": request.email, "user_type": "professor"})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP expired"
+        )
+
+    if otp_doc.get("attempts", 0) >= settings.otp_max_attempts:
+        await otp_collection.delete_many({"email": request.email, "user_type": "professor"})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP attempt limit exceeded"
+        )
+
+    if hash_otp(request.otp) != otp_doc.get("otp_hash"):
+        await otp_collection.update_one(
+            {"_id": otp_doc["_id"]},
+            {"$inc": {"attempts": 1}}
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP"
+        )
+
+    professor_payload = otp_doc.get("payload", {})
+    result = await professors_collection.insert_one(professor_payload)
     created_professor = await professors_collection.find_one({"_id": result.inserted_id})
     created_professor["id"] = str(created_professor["_id"])
-    
+
+    await otp_collection.delete_many({"email": request.email, "user_type": "professor"})
+
     return created_professor
 
 

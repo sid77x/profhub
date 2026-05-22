@@ -16,6 +16,16 @@ export interface RegisterRequest {
   experience_years?: number;
 }
 
+export interface OtpVerifyRequest {
+  email: string;
+  otp: string;
+}
+
+export interface OtpSendResponse {
+  message: string;
+  expires_in_seconds: number;
+}
+
 export interface AuthResponse {
   access_token: string;
   token_type: string;
@@ -30,6 +40,16 @@ export const authApi = {
 
   register: async (data: RegisterRequest): Promise<any> => {
     const response = await api.post('/auth/register', data);
+    return response.data;
+  },
+
+  requestRegisterOtp: async (data: RegisterRequest): Promise<OtpSendResponse> => {
+    const response = await api.post('/auth/register/request-otp', data);
+    return response.data;
+  },
+
+  verifyRegisterOtp: async (data: OtpVerifyRequest): Promise<any> => {
+    const response = await api.post('/auth/register/verify-otp', data);
     return response.data;
   },
 

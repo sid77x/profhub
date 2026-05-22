@@ -9,6 +9,7 @@ professors_collection = database.get_collection("professors")
 gigs_collection = database.get_collection("gigs")
 applications_collection = database.get_collection("applications")
 notifications_collection = database.get_collection("notifications")
+otp_collection = database.get_collection("email_otps")
 
 
 async def get_database():

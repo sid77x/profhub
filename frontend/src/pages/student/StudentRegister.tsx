@@ -12,30 +12,51 @@ const StudentRegister: React.FC = () => {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', reg_no: '', department: '', year: '', cgpa: '', college_name: '',
   });
   const [idCardImage, setIdCardImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate ID card image
+
     if (!idCardImage) {
       toast.error('Please upload your ID card photo');
       return;
     }
-    
+
     setLoading(true);
     try {
-      await axios.post(`${API_URL}/students/register`, { ...formData, year: parseInt(formData.year), cgpa: parseFloat(formData.cgpa), id_card_image: idCardImage });
-      toast.success('Registration successful!');
+      await axios.post(`${API_URL}/students/register/request-otp`, {
+        ...formData,
+        year: parseInt(formData.year),
+        cgpa: parseFloat(formData.cgpa),
+        id_card_image: idCardImage
+      });
+      setOtpSent(true);
+      toast.success('OTP sent to your email');
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to send OTP');
+    } finally { setLoading(false); }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp.trim()) {
+      toast.error('Please enter the OTP');
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(`${API_URL}/students/register/verify-otp`, { email: formData.email, otp });
       const loginResponse = await axios.post(`${API_URL}/students/login`, { email: formData.email, password: formData.password });
       setAuth(loginResponse.data.access_token, loginResponse.data.student_id, 'student');
       navigate('/student/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Registration failed');
+      toast.error(error.response?.data?.detail || 'OTP verification failed');
     } finally { setLoading(false); }
   };
 
@@ -92,41 +113,41 @@ const StudentRegister: React.FC = () => {
           <p className="text-muted-foreground">Join ResearchConnect to find amazing research opportunities</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">Full Name</label>
-              <input type="text" name="name" required value={formData.name} onChange={handleChange} className={inputClass} placeholder="John Doe" />
+              <input type="text" name="name" required disabled={otpSent} value={formData.name} onChange={handleChange} className={inputClass} placeholder="John Doe" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">Registration Number</label>
-              <input type="text" name="reg_no" required value={formData.reg_no} onChange={handleChange} className={inputClass} placeholder="2021BCS001" />
+              <input type="text" name="reg_no" required disabled={otpSent} value={formData.reg_no} onChange={handleChange} className={inputClass} placeholder="2021BCS001" />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-foreground mb-1.5">Email</label>
-            <input type="email" name="email" required value={formData.email} onChange={handleChange} className={inputClass} placeholder="your.email@university.edu" />
+            <input type="email" name="email" required disabled={otpSent} value={formData.email} onChange={handleChange} className={inputClass} placeholder="your.email@university.edu" />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-foreground mb-1.5">Password</label>
-            <input type="password" name="password" required value={formData.password} onChange={handleChange} className={inputClass} placeholder="••••••••" />
+            <input type="password" name="password" required disabled={otpSent} value={formData.password} onChange={handleChange} className={inputClass} placeholder="••••••••" />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-foreground mb-1.5">College/University</label>
-            <input type="text" name="college_name" value={formData.college_name} onChange={handleChange} className={inputClass} placeholder="XYZ University" />
+            <input type="text" name="college_name" disabled={otpSent} value={formData.college_name} onChange={handleChange} className={inputClass} placeholder="XYZ University" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">Department</label>
-              <input type="text" name="department" required value={formData.department} onChange={handleChange} className={inputClass} placeholder="Computer Science" />
+              <input type="text" name="department" required disabled={otpSent} value={formData.department} onChange={handleChange} className={inputClass} placeholder="Computer Science" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">Year</label>
-              <select name="year" required value={formData.year} onChange={handleChange} className={inputClass}>
+              <select name="year" required disabled={otpSent} value={formData.year} onChange={handleChange} className={inputClass}>
                 <option value="">Select Year</option>
                 <option value="1">1st Year</option>
                 <option value="2">2nd Year</option>
@@ -139,7 +160,7 @@ const StudentRegister: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">CGPA (0-10)</label>
-              <input type="number" name="cgpa" required value={formData.cgpa} onChange={handleChange} className={inputClass} placeholder="7.50" min="0" max="10" step="0.01" />
+              <input type="number" name="cgpa" required disabled={otpSent} value={formData.cgpa} onChange={handleChange} className={inputClass} placeholder="7.50" min="0" max="10" step="0.01" />
             </div>
           </div>
 
@@ -152,6 +173,7 @@ const StudentRegister: React.FC = () => {
                 onChange={handleImageChange}
                 className="hidden"
                 id="id-card-input"
+                disabled={otpSent}
               />
               <label htmlFor="id-card-input" className="cursor-pointer block">
                 {imagePreview ? (
@@ -171,9 +193,18 @@ const StudentRegister: React.FC = () => {
             {!idCardImage && <p className="text-xs text-destructive mt-2">ID card photo is required</p>}
           </div>
 
+          {otpSent && (
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">OTP</label>
+              <input type="text" required value={otp} onChange={(e) => setOtp(e.target.value)} className={inputClass} placeholder="Enter 5-digit OTP" />
+            </div>
+          )}
+
           <button type="submit" disabled={loading}
             className="w-full py-3 rounded-xl text-sm font-bold text-secondary-foreground bg-secondary hover:opacity-90 shadow-lg disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-2">
-            {loading ? <><div className="animate-spin rounded-full h-4 w-4 border-2 border-secondary-foreground border-t-transparent" /> Creating account...</> : 'Create Account'}
+            {loading ? (
+              <><div className="animate-spin rounded-full h-4 w-4 border-2 border-secondary-foreground border-t-transparent" /> {otpSent ? 'Verifying OTP...' : 'Sending OTP...'}</>
+            ) : (otpSent ? 'Verify OTP' : 'Send OTP')}
           </button>
         </form>
 

@@ -26,3 +26,7 @@ class RegisterRequest(BaseModel):
     research_areas: Optional[str] = None
     experience_years: Optional[int] = None
     previous_publications: Optional[str] = None
+
+
+class RegisterOtpRequest(RegisterRequest):
+    pass
