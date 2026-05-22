@@ -1,6 +1,11 @@
 from pydantic import BaseModel, EmailStr
 
 
+class OtpRequestRequest(BaseModel):
+    """Request to send OTP to an email"""
+    email: EmailStr
+
+
 class OtpVerifyRequest(BaseModel):
     email: EmailStr
     otp: str

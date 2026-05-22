@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel, EmailStr
 from bson import ObjectId
 from datetime import datetime, timedelta
 import hashlib
@@ -7,7 +8,7 @@ from core.config import settings
 from core.database import database, gigs_collection, applications_collection, otp_collection
 from core.email import send_otp_email
 from core.otp import generate_otp, hash_otp
-from schemas.otp import OtpVerifyRequest, OtpSendResponse
+from schemas.otp import OtpRequestRequest, OtpVerifyRequest, OtpSendResponse
 from schemas.student import StudentCreate, StudentResponse, StudentLogin, StudentUpdate
 from core.auth import create_access_token
 
@@ -274,3 +275,115 @@ async def get_student_applications(student_id: str):
         applications.append(app_data)
     
     return applications
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str
+    confirm_password: str
+
+
+@router.post("/students/forgot-password/request-otp", response_model=OtpSendResponse)
+async def request_student_forgot_password_otp(request: OtpRequestRequest):
+    """Send OTP for student password reset"""
+    student = await students_collection.find_one({"email": request.email})
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Email not registered"
+        )
+
+    otp = generate_otp()
+    otp_doc = {
+        "email": request.email,
+        "user_type": "student",
+        "otp_type": "forgot_password",
+        "otp_hash": hash_otp(otp),
+        "attempts": 0,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(minutes=settings.otp_expiry_minutes),
+    }
+
+    await otp_collection.delete_many({"email": request.email, "user_type": "student", "otp_type": "forgot_password"})
+    await otp_collection.insert_one(otp_doc)
+
+    try:
+        send_otp_email(request.email, otp, "student", settings.otp_expiry_minutes)
+    except Exception as exc:
+        await otp_collection.delete_many({"email": request.email, "user_type": "student", "otp_type": "forgot_password"})
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send OTP email: {exc}"
+        )
+
+    return {
+        "message": "OTP sent to email",
+        "expires_in_seconds": settings.otp_expiry_minutes * 60
+    }
+
+
+@router.post("/students/forgot-password/reset")
+async def reset_student_password(request: ResetPasswordRequest):
+    """Verify OTP and reset student password"""
+    if request.new_password != request.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Passwords do not match"
+        )
+
+    otp_doc = await otp_collection.find_one({"email": request.email, "user_type": "student", "otp_type": "forgot_password"})
+    if not otp_doc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP not found or expired"
+        )
+
+    if otp_doc.get("expires_at") and otp_doc["expires_at"] < datetime.utcnow():
+        await otp_collection.delete_many({"email": request.email, "user_type": "student", "otp_type": "forgot_password"})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP expired"
+        )
+
+    if otp_doc.get("attempts", 0) >= settings.otp_max_attempts:
+        await otp_collection.delete_many({"email": request.email, "user_type": "student", "otp_type": "forgot_password"})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP attempt limit exceeded"
+        )
+
+    if hash_otp(request.otp) != otp_doc.get("otp_hash"):
+        await otp_collection.update_one(
+            {"_id": otp_doc["_id"]},
+            {"$inc": {"attempts": 1}}
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP"
+        )
+
+    new_hashed_password = hash_password(request.new_password)
+    result = await students_collection.update_one(
+        {"email": request.email},
+        {"$set": {"password": new_hashed_password}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student not found"
+        )
+
+    student = await students_collection.find_one({"email": request.email})
+    await otp_collection.delete_many({"email": request.email, "user_type": "student", "otp_type": "forgot_password"})
+
+    token_data = {"sub": str(student["_id"]), "type": "student"}
+    access_token = create_access_token(token_data)
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "student_id": str(student["_id"]),
+        "message": "Password reset successfully"
+    }

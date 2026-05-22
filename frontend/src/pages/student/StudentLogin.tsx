@@ -121,9 +121,13 @@ const StudentLogin: React.FC = () => {
                 <input type="checkbox" className="w-4 h-4 rounded border-input text-secondary focus:ring-ring" />
                 Remember me
               </label>
-              <a href="#" className="text-sm font-semibold text-secondary hover:opacity-80 transition-colors">
+              <button
+                type="button"
+                onClick={() => navigate('/student/forgot-password')}
+                className="text-sm font-semibold text-secondary hover:opacity-80 transition-colors"
+              >
                 Forgot password?
-              </a>
+              </button>
             </div>
 
             <button

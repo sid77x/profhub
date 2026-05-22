@@ -26,6 +26,13 @@ export interface OtpSendResponse {
   expires_in_seconds: number;
 }
 
+export interface ResetPasswordRequest {
+  email: string;
+  otp: string;
+  new_password: string;
+  confirm_password: string;
+}
+
 export interface AuthResponse {
   access_token: string;
   token_type: string;
@@ -50,6 +57,26 @@ export const authApi = {
 
   verifyRegisterOtp: async (data: OtpVerifyRequest): Promise<any> => {
     const response = await api.post('/auth/register/verify-otp', data);
+    return response.data;
+  },
+
+  requestForgotPasswordOtp: async (email: string): Promise<OtpSendResponse> => {
+    const response = await api.post('/auth/forgot-password/request-otp', { email });
+    return response.data;
+  },
+
+  resetPassword: async (data: ResetPasswordRequest): Promise<any> => {
+    const response = await api.post('/auth/forgot-password/reset', data);
+    return response.data;
+  },
+
+  requestStudentForgotPasswordOtp: async (email: string): Promise<OtpSendResponse> => {
+    const response = await api.post('/students/forgot-password/request-otp', { email });
+    return response.data;
+  },
+
+  resetStudentPassword: async (data: ResetPasswordRequest): Promise<any> => {
+    const response = await api.post('/students/forgot-password/reset', data);
     return response.data;
   },
 

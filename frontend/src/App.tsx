@@ -15,9 +15,11 @@ import EditGig from './pages/professor/EditGig';
 import ViewGigApplications from './pages/professor/ViewGigApplications';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
 // Student pages
 import StudentLogin from './pages/student/StudentLogin';
 import StudentRegister from './pages/student/StudentRegister';
+import StudentForgotPassword from './pages/student/StudentForgotPassword';
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentProfile from './pages/student/StudentProfile';
 import BrowseGigs from './pages/student/BrowseGigs';
@@ -61,10 +63,12 @@ const App: React.FC = () => {
         {/* Professor Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         
         {/* Student Auth */}
         <Route path="/student/login" element={<StudentLogin />} />
         <Route path="/student/register" element={<StudentRegister />} />
+        <Route path="/student/forgot-password" element={<StudentForgotPassword />} />
         
         {/* Public Professor Profile */}
         <Route path="/professor-profile/:id" element={<ProfessorProfile />} />
