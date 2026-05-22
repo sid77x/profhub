@@ -23,6 +23,7 @@ import StudentProfile from './pages/student/StudentProfile';
 import BrowseGigs from './pages/student/BrowseGigs';
 import GigDetail from './pages/student/GigDetail';
 import ProfessorProfile from './pages/student/ProfessorProfile';
+import NotFound from './pages/NotFound';
 
 const App: React.FC = () => {
   return (
@@ -88,6 +89,8 @@ const App: React.FC = () => {
           <Route path="gigs/:id" element={<GigDetail />} />
           <Route path="applications" element={<StudentDashboard />} />
         </Route>
+        {/* 404 - Not Found */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
