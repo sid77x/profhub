@@ -6,10 +6,12 @@ database = client[settings.database_name]
 
 # Collections
 professors_collection = database.get_collection("professors")
+students_collection = database.get_collection("students")
 gigs_collection = database.get_collection("gigs")
 applications_collection = database.get_collection("applications")
 notifications_collection = database.get_collection("notifications")
 otp_collection = database.get_collection("email_otps")
+admins_collection = database.get_collection("admins")
 
 
 async def get_database():

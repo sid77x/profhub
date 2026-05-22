@@ -16,6 +16,8 @@ import ViewGigApplications from './pages/professor/ViewGigApplications';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
 // Student pages
 import StudentLogin from './pages/student/StudentLogin';
 import StudentRegister from './pages/student/StudentRegister';
@@ -69,6 +71,10 @@ const App: React.FC = () => {
         <Route path="/student/login" element={<StudentLogin />} />
         <Route path="/student/register" element={<StudentRegister />} />
         <Route path="/student/forgot-password" element={<StudentForgotPassword />} />
+        
+        {/* Admin Auth */}
+        <Route path="/profhub" element={<AdminLogin />} />
+        <Route path="/profhub/dashboard" element={<AdminDashboard />} />
         
         {/* Public Professor Profile */}
         <Route path="/professor-profile/:id" element={<ProfessorProfile />} />
