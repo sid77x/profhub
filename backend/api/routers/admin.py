@@ -7,7 +7,7 @@ from bson import ObjectId
 from core.config import settings
 from core.database import professors_collection, students_collection, gigs_collection, applications_collection, admins_collection
 from core.auth import verify_password, get_password_hash, create_access_token
-from schemas.admin import AdminLogin, AdminResponse, AdminToken, ProfessorData, StudentData, GigData, ApplicationData
+from schemas.admin import AdminLogin, AdminResponse, AdminToken, ProfessorData, StudentData, GigData, ApplicationData, OnboardProfessorRequest, OnboardStudentRequest, OnboardResponse
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -263,3 +263,86 @@ async def get_admin_stats():
         "approved_applications": approved_apps,
         "rejected_applications": rejected_apps
     }
+
+
+# ======================== ONBOARDING ENDPOINTS ========================
+
+@router.post("/professors/onboard", response_model=OnboardResponse)
+async def onboard_professor(request: OnboardProfessorRequest):
+    """Admin onboard a new professor without OTP verification"""
+    # Check if email already exists
+    existing_prof = await professors_collection.find_one({"email": request.email})
+    if existing_prof:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Create professor document
+    professor_doc = {
+        "name": request.name,
+        "email": request.email,
+        "password_hash": get_password_hash(request.password),
+        "department": request.department,
+        "qualification": request.qualification,
+        "college_name": request.college_name,
+        "research_areas": request.research_areas,
+        "experience_years": request.experience_years,
+        "previous_publications": request.previous_publications,
+        "created_at": datetime.utcnow(),
+        "bio": None,
+        "expertise": []
+    }
+    
+    result = await professors_collection.insert_one(professor_doc)
+    
+    return {
+        "message": f"Professor {request.name} has been onboarded successfully",
+        "user_id": str(result.inserted_id),
+        "email": request.email
+    }
+
+
+@router.post("/students/onboard", response_model=OnboardResponse)
+async def onboard_student(request: OnboardStudentRequest):
+    """Admin onboard a new student without OTP verification"""
+    # Check if email already exists
+    existing_student = await students_collection.find_one({"email": request.email})
+    if existing_student:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Check if registration number already exists
+    existing_reg = await students_collection.find_one({"registration_number": request.registration_number})
+    if existing_reg:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Registration number already exists"
+        )
+    
+    # Create student document
+    student_doc = {
+        "name": request.name,
+        "email": request.email,
+        "password": request.password,  # Using plain text field as per student model
+        "year": request.year,
+        "cgpa": request.cgpa,
+        "registration_number": request.registration_number,
+        "college_name": request.college_name,
+        "created_at": datetime.utcnow(),
+        "skills": [],
+        "resume_url": None,
+        "bio": None,
+        "id_card_image": None
+    }
+    
+    result = await students_collection.insert_one(student_doc)
+    
+    return {
+        "message": f"Student {request.name} has been onboarded successfully",
+        "user_id": str(result.inserted_id),
+        "email": request.email
+    }
+

@@ -73,3 +73,33 @@ class ApplicationData(BaseModel):
     gig_id: str
     status: str
     applied_at: datetime
+
+
+class OnboardProfessorRequest(BaseModel):
+    """For admin onboarding a professor"""
+    name: str
+    email: EmailStr
+    password: str
+    department: str
+    qualification: str
+    college_name: Optional[str] = None
+    research_areas: Optional[str] = None
+    experience_years: Optional[int] = None
+    previous_publications: Optional[str] = None
+
+
+class OnboardStudentRequest(BaseModel):
+    """For admin onboarding a student"""
+    name: str
+    email: EmailStr
+    password: str
+    year: int
+    cgpa: float
+    registration_number: str
+    college_name: str
+
+
+class OnboardResponse(BaseModel):
+    message: str
+    user_id: str
+    email: str

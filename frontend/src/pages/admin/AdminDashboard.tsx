@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, BookOpen, FileText, BarChart3, Trash2, Search } from 'lucide-react';
+import { LogOut, Users, BookOpen, FileText, BarChart3, Trash2, Search, Plus } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
+import OnboardProfessorModal from './OnboardProfessorModal';
+import OnboardStudentModal from './OnboardStudentModal';
 
 const API_URL = 'http://localhost:8000/api';
 
@@ -61,6 +63,8 @@ const AdminDashboard: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showOnboardProfModal, setShowOnboardProfModal] = useState(false);
+  const [showOnboardStudentModal, setShowOnboardStudentModal] = useState(false);
 
   const adminName = localStorage.getItem('admin_name');
   const token = localStorage.getItem('admin_token');
@@ -230,8 +234,8 @@ const AdminDashboard: React.FC = () => {
         {/* Professors Tab */}
         {activeTab === 'professors' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="mb-4">
-              <div className="relative">
+            <div className="mb-4 flex gap-3">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
@@ -241,6 +245,13 @@ const AdminDashboard: React.FC = () => {
                   className="w-full pl-10 pr-4 py-2 bg-muted border border-input rounded-lg"
                 />
               </div>
+              <button
+                onClick={() => setShowOnboardProfModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-glow transition-colors whitespace-nowrap"
+              >
+                <Plus className="h-4 w-4" />
+                Onboard Professor
+              </button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -280,8 +291,8 @@ const AdminDashboard: React.FC = () => {
         {/* Students Tab */}
         {activeTab === 'students' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="mb-4">
-              <div className="relative">
+            <div className="mb-4 flex gap-3">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
@@ -291,6 +302,13 @@ const AdminDashboard: React.FC = () => {
                   className="w-full pl-10 pr-4 py-2 bg-muted border border-input rounded-lg"
                 />
               </div>
+              <button
+                onClick={() => setShowOnboardStudentModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-colors whitespace-nowrap"
+              >
+                <Plus className="h-4 w-4" />
+                Onboard Student
+              </button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -382,6 +400,20 @@ const AdminDashboard: React.FC = () => {
             </div>
           </motion.div>
         )}
+
+        {/* Modals */}
+        <OnboardProfessorModal
+          isOpen={showOnboardProfModal}
+          onClose={() => setShowOnboardProfModal(false)}
+          onSuccess={loadData}
+          token={token}
+        />
+        <OnboardStudentModal
+          isOpen={showOnboardStudentModal}
+          onClose={() => setShowOnboardStudentModal(false)}
+          onSuccess={loadData}
+          token={token}
+        />
       </div>
     </div>
   );
