@@ -5,6 +5,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
 import ThemeToggle from '../../components/ThemeToggle';
+import { manipalColleges, manipalDepartmentsByCollege } from '../../data/manipal';
 
 const API_URL = 'http://localhost:8000/api';
 
@@ -20,6 +21,9 @@ const StudentRegister: React.FC = () => {
   const [idCardImage, setIdCardImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  const selectedCollege = manipalColleges.find((college) => college.value === formData.college_name);
+  const departmentOptions = formData.college_name ? (manipalDepartmentsByCollege[formData.college_name] || []) : [];
+
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -32,6 +36,7 @@ const StudentRegister: React.FC = () => {
     try {
       await axios.post(`${API_URL}/students/register/request-otp`, {
         ...formData,
+        college_name: selectedCollege?.label || formData.college_name,
         year: parseInt(formData.year),
         cgpa: parseFloat(formData.cgpa),
         id_card_image: idCardImage
@@ -62,6 +67,13 @@ const StudentRegister: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleCollegeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextCollege = e.target.value;
+    const nextDepartments = manipalDepartmentsByCollege[nextCollege] || [];
+    const nextDepartment = nextDepartments.length === 1 ? nextDepartments[0] : '';
+    setFormData((prev) => ({ ...prev, college_name: nextCollege, department: nextDepartment }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,13 +149,37 @@ const StudentRegister: React.FC = () => {
 
           <div>
             <label className="block text-sm font-semibold text-foreground mb-1.5">College/University</label>
-            <input type="text" name="college_name" disabled={otpSent} value={formData.college_name} onChange={handleChange} className={inputClass} placeholder="XYZ University" />
+            <select
+              name="college_name"
+              required
+              disabled={otpSent}
+              value={formData.college_name}
+              onChange={handleCollegeChange}
+              className={inputClass}
+            >
+              <option value="">Select College/University</option>
+              {manipalColleges.map((college) => (
+                <option key={college.value} value={college.value}>{college.label}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">Department</label>
-              <input type="text" name="department" required disabled={otpSent} value={formData.department} onChange={handleChange} className={inputClass} placeholder="Computer Science" />
+              <select
+                name="department"
+                required
+                disabled={otpSent || !formData.college_name}
+                value={formData.department}
+                onChange={handleChange}
+                className={inputClass}
+              >
+                <option value="">{formData.college_name ? 'Select Department' : 'Select college first'}</option>
+                {departmentOptions.map((department) => (
+                  <option key={department} value={department}>{department}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">Year</label>

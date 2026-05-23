@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authApi } from '../../api/auth';
 import ThemeToggle from '../../components/ThemeToggle';
+import { manipalColleges, manipalDepartmentsByCollege } from '../../data/manipal';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +16,9 @@ const Register: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const selectedCollege = manipalColleges.find((college) => college.value === formData.college_name);
+  const departmentOptions = formData.college_name ? (manipalDepartmentsByCollege[formData.college_name] || []) : [];
+
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -23,7 +27,9 @@ const Register: React.FC = () => {
     try {
       await authApi.requestRegisterOtp({
         name: formData.name, email: formData.email, password: formData.password,
-        department: formData.department, college_name: formData.college_name, qualification: formData.qualification,
+        department: formData.department,
+        college_name: selectedCollege?.label || formData.college_name,
+        qualification: formData.qualification,
       });
       setOtpSent(true);
       alert('OTP sent to your email. Please enter it below.');
@@ -93,13 +99,40 @@ const Register: React.FC = () => {
 
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">College/University</label>
-              <input type="text" disabled={otpSent} value={formData.college_name} onChange={(e) => setFormData({ ...formData, college_name: e.target.value })} className={inputClass} placeholder="e.g., MIT, Stanford" />
+              <select
+                required
+                disabled={otpSent}
+                value={formData.college_name}
+                onChange={(e) => {
+                  const nextCollege = e.target.value;
+                  const nextDepartments = manipalDepartmentsByCollege[nextCollege] || [];
+                  const nextDepartment = nextDepartments.length === 1 ? nextDepartments[0] : '';
+                  setFormData({ ...formData, college_name: nextCollege, department: nextDepartment });
+                }}
+                className={inputClass}
+              >
+                <option value="">Select College/University</option>
+                {manipalColleges.map((college) => (
+                  <option key={college.value} value={college.value}>{college.label}</option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-1.5">Department</label>
-                <input type="text" required disabled={otpSent} value={formData.department} onChange={(e) => setFormData({ ...formData, department: e.target.value })} className={inputClass} placeholder="Computer Science" />
+                <select
+                  required
+                  disabled={otpSent || !formData.college_name}
+                  value={formData.department}
+                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  className={inputClass}
+                >
+                  <option value="">{formData.college_name ? 'Select Department' : 'Select college first'}</option>
+                  {departmentOptions.map((department) => (
+                    <option key={department} value={department}>{department}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-1.5">Qualification</label>
