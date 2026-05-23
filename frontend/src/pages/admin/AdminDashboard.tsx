@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, BookOpen, FileText, BarChart3, Trash2, Search, Plus } from 'lucide-react';
+import { LogOut, Users, BookOpen, FileText, BarChart3, Trash2, Search, Plus, Shield } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import OnboardProfessorModal from './OnboardProfessorModal';
 import OnboardStudentModal from './OnboardStudentModal';
+import AuditLogs from './AuditLogs';
 
 const API_URL = 'http://localhost:8000/api';
 
@@ -55,7 +56,7 @@ interface Application {
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'professors' | 'students' | 'gigs' | 'applications'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'professors' | 'students' | 'gigs' | 'applications' | 'audit'>('overview');
   const [stats, setStats] = useState<Stats | null>(null);
   const [professors, setProfessors] = useState<Professor[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -106,11 +107,17 @@ const AdminDashboard: React.FC = () => {
     if (!window.confirm('Are you sure? This will delete all their gigs and applications.')) return;
     
     try {
+      if (!token) {
+        toast.error('Token missing. Please log in again.');
+        navigate('/profhub');
+        return;
+      }
       const headers = { Authorization: `Bearer ${token}` };
       await axios.delete(`${API_URL}/admin/professors/${profId}`, { headers });
       toast.success('Professor deboarded');
       loadData();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Delete error:', error.response?.status, error.response?.data);
       toast.error('Failed to delete professor');
     }
   };
@@ -119,11 +126,17 @@ const AdminDashboard: React.FC = () => {
     if (!window.confirm('Are you sure? This will delete their applications.')) return;
     
     try {
+      if (!token) {
+        toast.error('Token missing. Please log in again.');
+        navigate('/profhub');
+        return;
+      }
       const headers = { Authorization: `Bearer ${token}` };
       await axios.delete(`${API_URL}/admin/students/${studId}`, { headers });
       toast.success('Student deboarded');
       loadData();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Delete error:', error.response?.status, error.response?.data);
       toast.error('Failed to delete student');
     }
   };
@@ -176,7 +189,8 @@ const AdminDashboard: React.FC = () => {
             { id: 'professors' as const, label: 'Professors', icon: Users },
             { id: 'students' as const, label: 'Students', icon: Users },
             { id: 'gigs' as const, label: 'Gigs', icon: BookOpen },
-            { id: 'applications' as const, label: 'Applications', icon: FileText }
+            { id: 'applications' as const, label: 'Applications', icon: FileText },
+            { id: 'audit' as const, label: 'Audit Logs', icon: Shield }
           ].map(tab => {
             const Icon = tab.icon;
             return (
@@ -398,6 +412,13 @@ const AdminDashboard: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          </motion.div>
+        )}
+
+        {/* Audit Logs Tab */}
+        {activeTab === 'audit' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <AuditLogs token={token} />
           </motion.div>
         )}
 
