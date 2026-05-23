@@ -1,103 +1,190 @@
-# ResearchConnect
+# ProfHub - Research Collaboration Platform
 
 A comprehensive platform connecting professors with students for research collaboration opportunities. Professors can post research gigs, and students can browse and apply to opportunities that match their interests and qualifications.
 
-## 🚀 Features
+## 🎯 Project Overview
 
-### For Professors
-- **Dashboard**: Overview of all research gigs (open, closed, on-hold)
-- **Profile Management**: Manage academic profile and research interests
-- **Post Gigs**: Create detailed research opportunities with requirements
-- **Manage Applications**: Review and manage student applications
-- **Track Projects**: Monitor status of ongoing and completed research projects
+**ProfHub** streamlines the process of matching professors' research needs with talented students:
+- **Professors** post research opportunities with specific requirements
+- **Students** discover and apply to research positions
+- **Admins** manage the platform (onboard/deboard users, track audit logs)
 
-### For Students
-- **Browse Opportunities**: Discover research gigs across departments
-- **Detailed Search**: Filter by area of study, technologies, timeline
-- **Apply Seamlessly**: Submit applications with cover letters
-- **Track Applications**: Monitor status of submitted applications
-- **Profile Management**: Showcase skills, experience, and resume
+## 🏗️ Tech Stack
 
-## 📋 Prerequisites
+### Backend
+- **Framework**: FastAPI (Python 3.8+)
+- **Database**: MongoDB
+- **Authentication**: JWT tokens with role-based access
+- **Email**: SMTP (Gmail) for OTP notifications
+- **Features**: OTP verification, audit logging, admin dashboard
 
-Before you begin, ensure you have the following installed:
-- **Python 3.8+** - [Download Python](https://www.python.org/downloads/)
-- **Node.js 16+** and npm - [Download Node.js](https://nodejs.org/)
-- **MongoDB 5.0+** - [Download MongoDB](https://www.mongodb.com/try/download/community)
+### Frontend
+- **Framework**: React with TypeScript
+- **UI Framework**: Tailwind CSS + Framer Motion
+- **State Management**: Zustand
+- **HTTP Client**: Axios
+- **Routing**: React Router
 
-## 🛠️ Installation & Setup
+## 📦 Project Structure
 
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd ProfHub
+```
+profhub/
+├── backend/
+│   ├── api/routers/          # API endpoints
+│   ├── core/                 # Config, auth, database, utilities
+│   ├── models/               # Data models (Pydantic)
+│   ├── schemas/              # Request/response schemas
+│   ├── main.py               # FastAPI app entry point
+│   └── requirements.txt       # Python dependencies
+└── frontend/
+    ├── src/
+    │   ├── api/              # API client methods
+    │   ├── components/       # Reusable components
+    │   ├── pages/            # Page components
+    │   ├── store/            # Zustand stores
+    │   └── App.tsx           # Main app component
+    └── package.json          # NPM dependencies
 ```
 
-### 2. Backend Setup
+## 🚀 Quick Start
 
-#### Navigate to backend directory:
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- MongoDB (running locally or cloud)
+
+### Backend Setup
+See [backend/README.md](./backend/README.md) for detailed instructions
+
 ```bash
 cd backend
-```
-
-#### Create and activate virtual environment:
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# Linux/Mac
-python3 -m venv venv
-source venv/bin/activate
-```
-
-#### Install Python dependencies:
-```bash
 pip install -r requirements.txt
-```
-
-#### Start MongoDB:
-Make sure MongoDB is running on `mongodb://localhost:27017`
-
-```bash
-# Windows (if installed as service)
-net start MongoDB
-
-# Linux/Mac
-sudo systemctl start mongod
-# or
-mongod --dbpath /path/to/data/directory
-```
-
-#### Initialize the database:
-```bash
 python init_mongodb.py
-```
-
-This will:
-- Create the `profhub` database
-- Set up collections (professors, students, gigs, applications)
-- Create necessary indexes for optimal performance
-
-#### Start the backend server:
-```bash
 uvicorn main:app --reload
 ```
 
-The API will be available at:
-- **API**: `http://localhost:8000`
-- **API Documentation**: `http://localhost:8000/docs`
-- **Health Check**: `http://localhost:8000/health`
+**Backend runs on**: `http://localhost:8000`
 
-### 3. Frontend Setup
+### Frontend Setup
+See [frontend/README.md](./frontend/README.md) for detailed instructions
 
-Open a new terminal and navigate to the frontend directory:
 ```bash
 cd frontend
+npm install
+npm run dev
 ```
 
-#### Install Node.js dependencies:
+**Frontend runs on**: `http://localhost:5173`
+
+## 🔐 Authentication
+
+- **Professors**: Email/password with OTP verification
+- **Students**: Email/password with OTP verification
+- **Admins**: Email/password (no OTP required, direct admin creation)
+- **JWT Tokens**: 30-day expiry, role-based access control
+
+## 📊 Admin Features
+
+### Admin Dashboard (`/profhub`)
+- **Credentials**: 
+  - Email: `shivli.admin@profhub.com` | Password: `admin123`
+  - Email: `siddhant.admin@profhub.com` | Password: `admin123`
+
+### Admin Capabilities
+- **Onboard/Deboard**: Manage professors and students
+- **Manage Resources**: Delete gigs and applications
+- **View Statistics**: System-wide metrics and analytics
+- **Audit Logs**: Track all admin actions with timestamps
+
+## 🔍 Audit Logging
+
+All admin actions are automatically logged:
+- ✅ Onboard professor/student
+- ✅ Deboard professor/student
+- ✅ Delete gig/application
+- ✅ Export audit logs
+
+Access audit logs in the admin dashboard's "Audit Logs" tab.
+
+## 📝 API Documentation
+
+Once backend is running, visit: `http://localhost:8000/docs`
+
+### Key Endpoints
+- `POST /auth/register/request-otp` - Request OTP for registration
+- `POST /auth/register/verify-otp` - Verify OTP and create account
+- `POST /gigs` - Create a research gig (professors only)
+- `GET /gigs` - Browse available gigs
+- `POST /applications` - Apply to a gig (students only)
+- `POST /admin/login` - Admin authentication
+- `GET /admin/audit-logs` - View audit logs
+
+## 🛠️ Development
+
+### Database Initialization
 ```bash
+cd backend
+python init_mongodb.py
+```
+
+### Create Admin Accounts
+```bash
+cd backend
+python setup_admins.py
+```
+
+### Clear Audit Logs (if needed)
+Audit logs are stored in MongoDB. To query or export them, use the admin dashboard.
+
+## 📋 Features by User Type
+
+### Professors
+- Create research gigs with detailed requirements
+- Review student applications
+- Manage gig status (open/closed/on-hold)
+- View profile and applications
+- Forgot password recovery via OTP
+
+### Students
+- Browse research opportunities
+- Apply to gigs with custom cover letters
+- Track application status
+- Manage profile and skills
+- Forgot password recovery via OTP
+
+### Admins
+- Onboard new professors/students (bypassing registration)
+- Deboard users (cascading delete of related data)
+- Delete gigs and applications
+- Export system statistics
+- Monitor all actions via audit logs
+
+## 🚨 Troubleshooting
+
+### MongoDB Connection Issues
+```bash
+# Check MongoDB is running
+mongod --version
+```
+
+### Backend Errors
+Check logs in terminal running `uvicorn main:app --reload`
+
+### Frontend Errors
+Check browser console (F12 → Console tab)
+
+## 📚 Documentation
+- [Backend README](./backend/README.md) - Backend setup and API details
+- [Frontend README](./frontend/README.md) - Frontend setup and development
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 👥 Team
+
+Built with ❤️ for research collaboration.
+
 npm install
 ```
 
