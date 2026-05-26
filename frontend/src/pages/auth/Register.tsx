@@ -100,6 +100,8 @@ const Register: React.FC = () => {
             )}
 
             <div>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Email address</label>
+              <input
                 type="email"
                 required
                 disabled={otpSent}
@@ -117,13 +119,11 @@ const Register: React.FC = () => {
                 placeholder="professor@manipal.edu"
               />
               {emailError && <p className="text-xs text-destructive mt-1">{emailError}</p>}
-              <label className="block text-sm font-semibold text-foreground mb-1.5">Full Name</label>
-              <input type="text" required disabled={otpSent} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={inputClass} placeholder="Dr. John Doe" />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-foreground mb-1.5">Email address</label>
-              <input type="email" required disabled={otpSent} value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={inputClass} placeholder="john.doe@university.edu" />
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Full Name</label>
+              <input type="text" required disabled={otpSent} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={inputClass} placeholder="Dr. John Doe" />
             </div>
 
             <div>
@@ -177,6 +177,7 @@ const Register: React.FC = () => {
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">Confirm Password</label>
               <input type="password" required disabled={otpSent} value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} className={inputClass} placeholder="Confirm password" />
+            </div>
 
             {otpSent && (
               <div>
@@ -184,7 +185,6 @@ const Register: React.FC = () => {
                 <input type="text" required value={otp} onChange={(e) => setOtp(e.target.value)} className={inputClass} placeholder="Enter 5-digit OTP" />
               </div>
             )}
-            </div>
 
             <button type="submit" disabled={loading} className="w-full py-2.5 px-4 rounded-xl text-sm font-bold text-primary-foreground bg-primary hover:bg-primary-glow shadow-glow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2">
               {loading ? (
