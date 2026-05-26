@@ -20,8 +20,8 @@ const Register: React.FC = () => {
   const selectedCollege = manipalColleges.find((college) => college.value === formData.college_name);
   const departmentOptions = formData.college_name ? (manipalDepartmentsByCollege[formData.college_name] || []) : [];
 
-  const validateProfessorEmail = (email: string): boolean => {
-    return email.toLowerCase().endsWith('@manipal.edu');
+  const validateProfessorEmail = (_email: string): boolean => {
+    return true;
   };
 
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -29,10 +29,6 @@ const Register: React.FC = () => {
     setError('');
     if (formData.password !== formData.confirmPassword) { setError('Passwords do not match!'); return; }
     
-    if (!validateProfessorEmail(formData.email)) {
-      setEmailError('Invalid professor email. Must use @manipal.edu domain');
-      return;
-    }
     setEmailError('');
     
     setLoading(true);
@@ -109,14 +105,10 @@ const Register: React.FC = () => {
                 onChange={(e) => {
                   const email = e.target.value;
                   setFormData({ ...formData, email });
-                  if (email && !validateProfessorEmail(email)) {
-                    setEmailError('Must use @manipal.edu domain');
-                  } else {
-                    setEmailError('');
-                  }
+                  setEmailError('');
                 }}
                 className={inputClass}
-                placeholder="professor@manipal.edu"
+                placeholder="professor@example.com"
               />
               {emailError && <p className="text-xs text-destructive mt-1">{emailError}</p>}
             </div>

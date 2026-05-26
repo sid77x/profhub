@@ -23,18 +23,13 @@ const StudentRegister: React.FC = () => {
   const selectedCollege = manipalColleges.find((college) => college.value === formData.college_name);
   const departmentOptions = formData.college_name ? (manipalDepartmentsByCollege[formData.college_name] || []) : [];
 
-  const validateStudentEmail = (email: string): boolean => {
-    const pattern = /^[a-zA-Z0-9]+\.mitmpl202\d@learner\.manipal\.edu$/;
-    return pattern.test(email.toLowerCase());
+  const validateStudentEmail = (_email: string): boolean => {
+    return true;
   };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateStudentEmail(formData.email)) {
-      setEmailError('Invalid email format. Use: [xyz].mitmpl202[x]@learner.manipal.edu');
-      return;
-    }
     setEmailError('');
 
     setLoading(true);
@@ -83,11 +78,7 @@ const StudentRegister: React.FC = () => {
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
     setFormData((prev) => ({ ...prev, email }));
-    if (email && !validateStudentEmail(email)) {
-      setEmailError('Format: [xyz].mitmpl202[x]@learner.manipal.edu');
-    } else {
-      setEmailError('');
-    }
+    setEmailError('');
   };
 
   const inputClass = "w-full px-4 py-2.5 bg-muted border border-input rounded-xl text-foreground placeholder-muted-foreground focus-ring transition-all sm:text-sm";
@@ -128,7 +119,7 @@ const StudentRegister: React.FC = () => {
 
           <div>
             <label className="block text-sm font-semibold text-foreground mb-1.5">Email</label>
-            <input type="email" name="email" required disabled={otpSent} value={formData.email} onChange={handleEmailChange} className={inputClass} placeholder="abc.mitmpl2025@learner.manipal.edu" />
+            <input type="email" name="email" required disabled={otpSent} value={formData.email} onChange={handleEmailChange} className={inputClass} placeholder="student@example.com" />
             {emailError && <p className="text-xs text-destructive mt-1">{emailError}</p>}
           </div>
 

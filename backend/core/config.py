@@ -25,11 +25,10 @@ settings = Settings()
 
 
 def validate_professor_email(email: str) -> bool:
-    """Validate professor email ends with @manipal.edu"""
-    return email.lower().endswith("@manipal.edu")
+    """Placeholder validation: allow all professor emails for now."""
+    return True
 
 
 def validate_student_email(email: str) -> bool:
-    """Validate student email format: [xyz].mitmpl202[x]@learner.manipal.edu"""
-    pattern = r"^[a-zA-Z0-9]+\.mitmpl202\d@learner\.manipal\.edu$"
-    return bool(re.match(pattern, email.lower()))
+    """Placeholder validation: allow all student emails for now."""
+    return True
