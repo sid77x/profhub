@@ -3,9 +3,10 @@ Check notifications in the database
 """
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
+from core.config import settings
 
-MONGODB_URL = "mongodb://localhost:27017"
-DATABASE_NAME = "profhub"
+MONGODB_URL = settings.mongodb_url
+DATABASE_NAME = settings.database_name
 
 
 async def check_notifications():

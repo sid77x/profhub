@@ -4,10 +4,11 @@ Clear all student accounts from MongoDB database
 """
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
+from core.config import settings
 
 # MongoDB connection
-MONGODB_URL = "mongodb://localhost:27017"
-DATABASE_NAME = "profhub"
+MONGODB_URL = settings.mongodb_url
+DATABASE_NAME = settings.database_name
 
 
 async def clear_students():

@@ -3,10 +3,11 @@ Initialize MongoDB database and create indexes for ProfHub
 """
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
+from core.config import settings
 
 # MongoDB connection
-MONGODB_URL = "mongodb+srv://researchconnect_users:v2epxGGQUtHq9bF7@cluster0.pz1qinu.mongodb.net/profhub?retryWrites=true&w=majority&appName=Cluster0"
-DATABASE_NAME = "profhub"
+MONGODB_URL = settings.mongodb_url
+DATABASE_NAME = settings.database_name
 
 
 async def init_db():
