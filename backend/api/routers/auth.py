@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, EmailStr
-from core.config import settings
+from core.config import settings, validate_professor_email
 from core.database import professors_collection, otp_collection
 from core.auth import verify_password, get_password_hash, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from core.email import send_otp_email
@@ -25,6 +25,12 @@ async def register_deprecated():
 @router.post("/register/request-otp", response_model=OtpSendResponse)
 async def request_register_otp(request: RegisterOtpRequest):
     """Send OTP for professor registration"""
+    if not validate_professor_email(request.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid professor email. Must use @manipal.edu domain"
+        )
+    
     existing = await professors_collection.find_one({"email": request.email})
     if existing:
         raise HTTPException(

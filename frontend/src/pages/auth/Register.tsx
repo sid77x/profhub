@@ -15,14 +15,26 @@ const Register: React.FC = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   const selectedCollege = manipalColleges.find((college) => college.value === formData.college_name);
   const departmentOptions = formData.college_name ? (manipalDepartmentsByCollege[formData.college_name] || []) : [];
+
+  const validateProfessorEmail = (email: string): boolean => {
+    return email.toLowerCase().endsWith('@manipal.edu');
+  };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (formData.password !== formData.confirmPassword) { setError('Passwords do not match!'); return; }
+    
+    if (!validateProfessorEmail(formData.email)) {
+      setEmailError('Invalid professor email. Must use @manipal.edu domain');
+      return;
+    }
+    setEmailError('');
+    
     setLoading(true);
     try {
       await authApi.requestRegisterOtp({
@@ -88,6 +100,23 @@ const Register: React.FC = () => {
             )}
 
             <div>
+                type="email"
+                required
+                disabled={otpSent}
+                value={formData.email}
+                onChange={(e) => {
+                  const email = e.target.value;
+                  setFormData({ ...formData, email });
+                  if (email && !validateProfessorEmail(email)) {
+                    setEmailError('Must use @manipal.edu domain');
+                  } else {
+                    setEmailError('');
+                  }
+                }}
+                className={inputClass}
+                placeholder="professor@manipal.edu"
+              />
+              {emailError && <p className="text-xs text-destructive mt-1">{emailError}</p>}
               <label className="block text-sm font-semibold text-foreground mb-1.5">Full Name</label>
               <input type="text" required disabled={otpSent} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={inputClass} placeholder="Dr. John Doe" />
             </div>

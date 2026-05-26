@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+import re
 
 
 class Settings(BaseSettings):
@@ -21,3 +22,14 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def validate_professor_email(email: str) -> bool:
+    """Validate professor email ends with @manipal.edu"""
+    return email.lower().endswith("@manipal.edu")
+
+
+def validate_student_email(email: str) -> bool:
+    """Validate student email format: [xyz].mitmpl202[x]@learner.manipal.edu"""
+    pattern = r"^[a-zA-Z0-9]+\.mitmpl202\d@learner\.manipal\.edu$"
+    return bool(re.match(pattern, email.lower()))

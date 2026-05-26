@@ -4,7 +4,7 @@ from bson import ObjectId
 from datetime import datetime, timedelta
 import hashlib
 
-from core.config import settings
+from core.config import settings, validate_student_email
 from core.database import database, gigs_collection, applications_collection, otp_collection
 from core.email import send_otp_email
 from core.otp import generate_otp, hash_otp
@@ -43,7 +43,6 @@ def student_doc_to_response(doc) -> dict:
         "skills": doc.get("skills", []),
         "resume_url": doc.get("resume_url"),
         "bio": doc.get("bio"),
-        "id_card_image": doc.get("id_card_image"),
     }
 
 
@@ -60,6 +59,12 @@ async def register_student_deprecated():
 async def request_student_register_otp(student: StudentCreate):
     """Send OTP for student registration"""
     existing = await students_collection.find_one({"email": student.email})
+    if not validate_student_email(student.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid student email. Must use [xyz].mitmpl202[x]@learner.manipal.edu format"
+        )
+    
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -87,7 +92,6 @@ async def request_student_register_otp(student: StudentCreate):
             "skills": [],
             "resume_url": None,
             "bio": None,
-            "id_card_image": student.id_card_image,
             "created_at": datetime.utcnow()
         }
     }

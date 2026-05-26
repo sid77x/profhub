@@ -15,22 +15,27 @@ const StudentRegister: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', reg_no: '', department: '', year: '', cgpa: '', college_name: '',
   });
-  const [idCardImage, setIdCardImage] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const selectedCollege = manipalColleges.find((college) => college.value === formData.college_name);
   const departmentOptions = formData.college_name ? (manipalDepartmentsByCollege[formData.college_name] || []) : [];
 
+  const validateStudentEmail = (email: string): boolean => {
+    const pattern = /^[a-zA-Z0-9]+\.mitmpl202\d@learner\.manipal\.edu$/;
+    return pattern.test(email.toLowerCase());
+  };
+
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!idCardImage) {
-      toast.error('Please upload your ID card photo');
+    if (!validateStudentEmail(formData.email)) {
+      setEmailError('Invalid email format. Use: [xyz].mitmpl202[x]@learner.manipal.edu');
       return;
     }
+    setEmailError('');
 
     setLoading(true);
     try {
@@ -39,7 +44,6 @@ const StudentRegister: React.FC = () => {
         college_name: selectedCollege?.label || formData.college_name,
         year: parseInt(formData.year),
         cgpa: parseFloat(formData.cgpa),
-        id_card_image: idCardImage
       });
       setOtpSent(true);
       toast.success('OTP sent to your email');
@@ -76,28 +80,13 @@ const StudentRegister: React.FC = () => {
     setFormData((prev) => ({ ...prev, college_name: nextCollege, department: nextDepartment }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB');
-        return;
-      }
-      
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select a valid image file');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setIdCardImage(base64String);
-        setImagePreview(base64String);
-      };
-      reader.readAsDataURL(file);
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const email = e.target.value;
+    setFormData((prev) => ({ ...prev, email }));
+    if (email && !validateStudentEmail(email)) {
+      setEmailError('Format: [xyz].mitmpl202[x]@learner.manipal.edu');
+    } else {
+      setEmailError('');
     }
   };
 
@@ -139,7 +128,8 @@ const StudentRegister: React.FC = () => {
 
           <div>
             <label className="block text-sm font-semibold text-foreground mb-1.5">Email</label>
-            <input type="email" name="email" required disabled={otpSent} value={formData.email} onChange={handleChange} className={inputClass} placeholder="your.email@university.edu" />
+            <input type="email" name="email" required disabled={otpSent} value={formData.email} onChange={handleEmailChange} className={inputClass} placeholder="abc.mitmpl2025@learner.manipal.edu" />
+            {emailError && <p className="text-xs text-destructive mt-1">{emailError}</p>}
           </div>
 
           <div>
@@ -198,35 +188,6 @@ const StudentRegister: React.FC = () => {
               <label className="block text-sm font-semibold text-foreground mb-1.5">CGPA (0-10)</label>
               <input type="number" name="cgpa" required disabled={otpSent} value={formData.cgpa} onChange={handleChange} className={inputClass} placeholder="7.50" min="0" max="10" step="0.01" />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-foreground mb-1.5">ID Card Photo (Required)</label>
-            <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer bg-muted/50">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-                id="id-card-input"
-                disabled={otpSent}
-              />
-              <label htmlFor="id-card-input" className="cursor-pointer block">
-                {imagePreview ? (
-                  <div className="space-y-3">
-                    <img src={imagePreview} alt="Preview" className="w-full max-h-40 object-cover rounded-lg mx-auto" />
-                    <p className="text-sm text-secondary opacity-70">Click to change image</p>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-3xl mb-2"></p>
-                    <p className="text-sm font-semibold text-foreground">Click to upload ID card photo</p>
-                    <p className="text-xs text-muted-foreground mt-1">Max 5MB • JPG, PNG, GIF</p>
-                  </div>
-                )}
-              </label>
-            </div>
-            {!idCardImage && <p className="text-xs text-destructive mt-2">ID card photo is required</p>}
           </div>
 
           {otpSent && (

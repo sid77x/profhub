@@ -17,7 +17,6 @@ class StudentCreate(StudentBase):
     year: int
     cgpa: float
     password: str
-    id_card_image: Optional[str] = None  # Base64 encoded image
 
 
 class StudentUpdate(BaseModel):
@@ -30,7 +29,6 @@ class StudentUpdate(BaseModel):
     resume_url: Optional[str] = None
     bio: Optional[str] = None
     previous_publications: Optional[str] = None
-    id_card_image: Optional[str] = None  # Base64 encoded image
 
 
 class StudentLogin(BaseModel):
@@ -44,7 +42,6 @@ class StudentResponse(StudentBase):
     resume_url: Optional[str] = None
     bio: Optional[str] = None
     cgpa: Optional[float] = None
-    id_card_image: Optional[str] = None
 
     class Config:
         from_attributes = True
