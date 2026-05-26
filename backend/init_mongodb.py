@@ -3,11 +3,10 @@ Initialize MongoDB database and create indexes for ProfHub
 """
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
-from core.config import settings
 
 # MongoDB connection
-MONGODB_URL = settings.mongodb_url
-DATABASE_NAME = settings.database_name
+MONGODB_URL = "mongodb+srv://researchconnect_users:v2epxGGQUtHq9bF7@cluster0.pz1qinu.mongodb.net/profhub?retryWrites=true&w=majority&appName=Cluster0"
+DATABASE_NAME = "profhub"
 
 
 async def init_db():
@@ -69,6 +68,31 @@ async def init_db():
     print("   ✓ Created compound index on 'user_id' and 'read'")
     print("   ✓ Created index on 'created_at'")
     
+    print("\n6. Setting up 'email_otps' collection...")
+    email_otps = db.get_collection("email_otps")
+    await email_otps.create_index("email", unique=False)
+    await email_otps.create_index("created_at")
+    print("   ✓ Created index on 'email'")
+    print("   ✓ Created index on 'created_at'")
+    
+    print("\n7. Setting up 'admins' collection...")
+    admins = db.get_collection("admins")
+    await admins.create_index("email", unique=True)
+    print("   ✓ Created unique index on 'email'")
+    
+    print("\n8. Setting up 'audit_logs' collection...")
+    audit_logs = db.get_collection("audit_logs")
+    await audit_logs.create_index("admin_id")
+    await audit_logs.create_index("action")
+    await audit_logs.create_index("resource_type")
+    await audit_logs.create_index("timestamp")
+    await audit_logs.create_index([("admin_id", 1), ("timestamp", -1)])
+    print("   ✓ Created index on 'admin_id'")
+    print("   ✓ Created index on 'action'")
+    print("   ✓ Created index on 'resource_type'")
+    print("   ✓ Created index on 'timestamp'")
+    print("   ✓ Created compound index on 'admin_id' and 'timestamp'")
+    
     # Show database stats
     print("\n" + "="*50)
     print("Database Statistics:")
@@ -82,6 +106,9 @@ async def init_db():
     gigs_count = await gigs.count_documents({})
     apps_count = await applications.count_documents({})
     notif_count = await notifications.count_documents({})
+    otp_count = await email_otps.count_documents({})
+    admin_count = await admins.count_documents({})
+    audit_count = await audit_logs.count_documents({})
     
     print(f"\nDocument counts:")
     print(f"  - Professors: {prof_count}")
@@ -89,6 +116,9 @@ async def init_db():
     print(f"  - Gigs: {gigs_count}")
     print(f"  - Applications: {apps_count}")
     print(f"  - Notifications: {notif_count}")
+    print(f"  - Email OTPs: {otp_count}")
+    print(f"  - Admins: {admin_count}")
+    print(f"  - Audit Logs: {audit_count}")
     
     print("\n✓ Database initialization complete!")
     print(f"\nYou can now start your backend server:")
