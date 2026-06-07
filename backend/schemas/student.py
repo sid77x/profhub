@@ -36,6 +36,34 @@ class StudentLogin(BaseModel):
     password: str
 
 
+class GoogleStudentAuthRequest(BaseModel):
+    email: EmailStr
+    google_uid: str
+    name: Optional[str] = None
+    photo_url: Optional[str] = None
+
+
+class GoogleStudentAuthResponse(BaseModel):
+    exists: bool
+    needs_registration: bool
+    student_id: Optional[str] = None
+    student: Optional["StudentResponse"] = None
+    message: str
+
+
+class GoogleStudentRegisterRequest(BaseModel):
+    name: str
+    email: EmailStr
+    google_uid: str
+    reg_no: str
+    department: str
+    year: int
+    cgpa: float
+    college_name: str
+    previous_publications: Optional[str] = None
+    photo_url: Optional[str] = None
+
+
 class StudentResponse(StudentBase):
     id: str
     skills: List[str] = []

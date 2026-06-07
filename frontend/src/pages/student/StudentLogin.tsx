@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye } from 'lucide-react';
+import { Eye, LogIn } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
 import ThemeToggle from '../../components/ThemeToggle';
+import { signInWithPopup } from 'firebase/auth';
+import { firebaseAuth, googleProvider, isFirebaseConfigured } from '../../lib/firebase';
+import { studentAuthApi } from '../../api/studentAuth';
 
 const API_URL = 'http://localhost:8000/api';
 
@@ -13,8 +16,53 @@ const StudentLogin: React.FC = () => {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    if (!isFirebaseConfigured || !firebaseAuth || !googleProvider) {
+      toast.error('Google sign-in is not configured yet');
+      return;
+    }
+
+    setGoogleLoading(true);
+    try {
+      const credential = await signInWithPopup(firebaseAuth, googleProvider);
+      const user = credential.user;
+      const idToken = await user.getIdToken();
+
+      const profile = {
+        email: user.email || '',
+        google_uid: user.uid,
+        name: user.displayName || '',
+        photo_url: user.photoURL || '',
+        id_token: idToken,
+      };
+
+      const response = await studentAuthApi.googleAuth({
+        email: profile.email,
+        google_uid: profile.google_uid,
+        name: profile.name,
+        photo_url: profile.photo_url,
+      });
+
+      if (response.exists && !response.needs_registration && response.student_id) {
+        setAuth(idToken, response.student_id, 'student');
+        sessionStorage.removeItem('student_google_profile');
+        toast.success('Welcome back!');
+        navigate('/student/dashboard');
+        return;
+      }
+
+      sessionStorage.setItem('student_google_profile', JSON.stringify(profile));
+      navigate('/student/register?google=1', { state: profile });
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || error.message || 'Google sign-in failed');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,6 +185,28 @@ const StudentLogin: React.FC = () => {
               {loading ? (
                 <><div className="animate-spin rounded-full h-4 w-4 border-2 border-secondary-foreground border-t-transparent" /> Signing in...</>
               ) : 'Sign in'}
+            </button>
+
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase tracking-widest text-muted-foreground">
+                <span className="bg-card px-3">or</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading}
+              className="w-full py-2.5 px-4 rounded-xl text-sm font-bold border border-border bg-background hover:bg-muted transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {googleLoading ? (
+                <><div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" /> Connecting...</>
+              ) : (
+                <><LogIn className="h-4 w-4" /> Continue with Google</>
+              )}
             </button>
           </form>
         </div>

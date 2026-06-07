@@ -15,6 +15,21 @@ from schemas.audit import AuditLogResponse, AuditStatsResponse
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
+def _as_object_id(value: str):
+    if value and ObjectId.is_valid(value):
+        return ObjectId(value)
+    return None
+
+
+async def _find_user_by_id(collection, value: str):
+    object_id = _as_object_id(value)
+    if object_id is not None:
+        user = await collection.find_one({"_id": object_id})
+        if user:
+            return user
+    return await collection.find_one({"_id": value})
+
+
 @router.post("/login", response_model=AdminToken)
 async def admin_login(request: AdminLogin):
     """Admin login endpoint"""
@@ -104,11 +119,11 @@ async def delete_professor(professor_id: str, request: Request):
     prof_email = professor.get("email", "Unknown")
     
     # Delete professor's gigs and associated applications
-    gigs = await gigs_collection.find({"professor_id": prof_id}).to_list(None)
+    gigs = await gigs_collection.find({"professor_id": professor_id}).to_list(None)
     for gig in gigs:
-        await applications_collection.delete_many({"gig_id": gig["_id"]})
+        await applications_collection.delete_many({"gig_id": str(gig["_id"])})
     
-    await gigs_collection.delete_many({"professor_id": prof_id})
+    await gigs_collection.delete_many({"professor_id": professor_id})
     await professors_collection.delete_one({"_id": prof_id})
     
     # Log the action
@@ -148,7 +163,7 @@ async def get_all_students(request: Request):
             "id": str(s["_id"]),
             "name": s.get("name", ""),
             "email": s.get("email", ""),
-            "registration_number": s.get("registration_number", ""),
+            "registration_number": s.get("registration_number", s.get("reg_no", "")),
             "year": s.get("year", 0),
             "cgpa": s.get("cgpa", 0.0),
             "college_name": s.get("college_name", ""),
@@ -180,8 +195,8 @@ async def delete_student(student_id: str, request: Request):
     stud_email = student.get("email", "Unknown")
     
     # Delete student's applications
-    apps_deleted = await applications_collection.count_documents({"student_id": stud_id})
-    await applications_collection.delete_many({"student_id": stud_id})
+    apps_deleted = await applications_collection.count_documents({"student_id": student_id})
+    await applications_collection.delete_many({"student_id": student_id})
     await students_collection.delete_one({"_id": stud_id})
     
     # Log the action
@@ -214,8 +229,8 @@ async def get_all_gigs(request: Request):
     
     result = []
     for gig in gigs:
-        prof = await professors_collection.find_one({"_id": gig.get("professor_id")})
-        app_count = await applications_collection.count_documents({"gig_id": gig["_id"]})
+        prof = await _find_user_by_id(professors_collection, gig.get("professor_id", ""))
+        app_count = await applications_collection.count_documents({"gig_id": str(gig["_id"])})
         
         result.append({
             "id": str(gig["_id"]),
@@ -284,8 +299,10 @@ async def get_all_applications(request: Request):
     
     result = []
     for app in applications:
-        student = await students_collection.find_one({"_id": app.get("student_id")})
-        gig = await gigs_collection.find_one({"_id": app.get("gig_id")})
+        student = await _find_user_by_id(students_collection, str(app.get("student_id", "")))
+        gig_id_value = str(app.get("gig_id", ""))
+        gig_object_id = _as_object_id(gig_id_value)
+        gig = await gigs_collection.find_one({"_id": gig_object_id}) if gig_object_id else await gigs_collection.find_one({"_id": gig_id_value})
         
         result.append({
             "id": str(app["_id"]),
@@ -463,7 +480,12 @@ async def onboard_student(request_body: OnboardStudentRequest, request: Request)
         )
     
     # Check if registration number already exists
-    existing_reg = await students_collection.find_one({"registration_number": request_body.registration_number})
+    existing_reg = await students_collection.find_one({
+        "$or": [
+            {"registration_number": request_body.registration_number},
+            {"reg_no": request_body.registration_number}
+        ]
+    })
     if existing_reg:
         await log_audit_action(
             admin_id=admin_info.get("id"),
@@ -485,10 +507,10 @@ async def onboard_student(request_body: OnboardStudentRequest, request: Request)
     student_doc = {
         "name": request_body.name,
         "email": request_body.email,
-        "password": request_body.password,  # Using plain text field as per student model
+        "password": get_password_hash(request_body.password),
         "year": request_body.year,
         "cgpa": request_body.cgpa,
-        "registration_number": request_body.registration_number,
+        "reg_no": request_body.registration_number,
         "college_name": request_body.college_name,
         "created_at": datetime.utcnow(),
         "skills": [],

@@ -9,14 +9,21 @@ from core.database import database, gigs_collection, applications_collection, ot
 from core.email import send_otp_email
 from core.otp import generate_otp, hash_otp
 from schemas.otp import OtpRequestRequest, OtpVerifyRequest, OtpSendResponse
-from schemas.student import StudentCreate, StudentResponse, StudentLogin, StudentUpdate
+from schemas.student import (
+    StudentCreate,
+    StudentResponse,
+    StudentLogin,
+    StudentUpdate,
+    GoogleStudentAuthRequest,
+    GoogleStudentAuthResponse,
+    GoogleStudentRegisterRequest,
+)
 from core.auth import create_access_token
 
 router = APIRouter()
 
 # Create students collection reference
-students_collection = database["students"]
-
+students_collection = database["students"] 
 
 def hash_password(password: str) -> str:
     """Hash password using SHA-256"""
@@ -32,11 +39,11 @@ def student_doc_to_response(doc) -> dict:
     """Convert MongoDB document to response format"""
     return {
         "id": str(doc["_id"]),
-        "name": doc["name"],
-        "email": doc["email"],
-        "reg_no": doc["reg_no"],
-        "department": doc["department"],
-        "year": doc["year"],
+        "name": doc.get("name", ""),
+        "email": doc.get("email", ""),
+        "reg_no": doc.get("reg_no", doc.get("registration_number", "")),
+        "department": doc.get("department", ""),
+        "year": doc.get("year", 0),
         "cgpa": doc.get("cgpa"),
         "college_name": doc.get("college_name"),
         "previous_publications": doc.get("previous_publications"),
@@ -185,6 +192,107 @@ async def login_student(credentials: StudentLogin):
         "student_id": str(student_doc["_id"]),
         "student": student_doc_to_response(student_doc)
     }
+
+
+def _is_profile_complete(student_doc: dict) -> bool:
+    required_fields = ["reg_no", "department", "year", "cgpa", "college_name"]
+    for field in required_fields:
+        value = student_doc.get(field)
+        if value is None or value == "":
+            return False
+    return True
+
+
+@router.post("/students/google-auth", response_model=GoogleStudentAuthResponse)
+async def google_student_auth(request: GoogleStudentAuthRequest):
+    """Check whether a Firebase-authenticated student already has a profile."""
+    student_doc = await students_collection.find_one({"email": request.email})
+
+    if not student_doc:
+        return {
+            "exists": False,
+            "needs_registration": True,
+            "student_id": None,
+            "student": None,
+            "message": "Student profile not found"
+        }
+
+    student_response = student_doc_to_response(student_doc)
+    needs_registration = not _is_profile_complete(student_doc)
+
+    return {
+        "exists": True,
+        "needs_registration": needs_registration,
+        "student_id": str(student_doc["_id"]),
+        "student": student_response,
+        "message": "Student profile found"
+    }
+
+
+@router.post("/students/google-register", response_model=StudentResponse, status_code=status.HTTP_201_CREATED)
+async def register_google_student(request: GoogleStudentRegisterRequest):
+    """Create a student profile after Firebase Google sign-in."""
+    existing_email = await students_collection.find_one({"email": request.email})
+    existing_reg = await students_collection.find_one({"reg_no": request.reg_no})
+    if existing_reg and (not existing_email or existing_reg["_id"] != existing_email.get("_id")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Registration number already exists"
+        )
+
+    if existing_email:
+        if _is_profile_complete(existing_email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+
+        await students_collection.update_one(
+            {"_id": existing_email["_id"]},
+            {
+                "$set": {
+                    "name": request.name,
+                    "reg_no": request.reg_no,
+                    "department": request.department,
+                    "year": request.year,
+                    "cgpa": request.cgpa,
+                    "college_name": request.college_name,
+                    "previous_publications": request.previous_publications,
+                    "google_uid": request.google_uid,
+                    "auth_provider": "google",
+                    "photo_url": request.photo_url,
+                    "password": hash_password(request.google_uid),
+                    "updated_at": datetime.utcnow(),
+                }
+            }
+        )
+
+        updated_doc = await students_collection.find_one({"_id": existing_email["_id"]})
+        return student_doc_to_response(updated_doc)
+
+    student_doc = {
+        "name": request.name,
+        "email": request.email,
+        "password": hash_password(request.google_uid),
+        "reg_no": request.reg_no,
+        "department": request.department,
+        "year": request.year,
+        "cgpa": request.cgpa,
+        "college_name": request.college_name,
+        "previous_publications": request.previous_publications,
+        "google_uid": request.google_uid,
+        "auth_provider": "google",
+        "photo_url": request.photo_url,
+        "created_at": datetime.utcnow(),
+        "skills": [],
+        "resume_url": None,
+        "bio": None,
+        "id_card_image": None,
+    }
+
+    result = await students_collection.insert_one(student_doc)
+    created_doc = await students_collection.find_one({"_id": result.inserted_id})
+    return student_doc_to_response(created_doc)
 
 
 @router.get("/students/{student_id}", response_model=StudentResponse)
