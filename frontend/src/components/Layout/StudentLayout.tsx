@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStudentStore } from '../../store/studentStore';
 import { useAuthStore } from '../../store/authStore';
 import NotificationPanel from '../NotificationPanel';
+import ChatPanel from '../ChatPanel';
 import ThemeToggle from '../ThemeToggle';
 
 const StudentLayout: React.FC = () => {
@@ -23,6 +24,7 @@ const StudentLayout: React.FC = () => {
     { path: '/student/dashboard', label: 'Dashboard' },
     { path: '/student/gigs', label: 'Browse Gigs' },
     { path: '/student/profile', label: 'My Profile' },
+    { path: '/student/chats', label: 'Chats' },
   ];
 
   const handleSignOut = () => {
@@ -62,6 +64,7 @@ const StudentLayout: React.FC = () => {
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <NotificationPanel />
+              <ChatPanel />
 
               <div className="relative hidden md:block">
                 <button

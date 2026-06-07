@@ -93,6 +93,24 @@ async def init_db():
     print("   ✓ Created index on 'resource_type'")
     print("   ✓ Created index on 'timestamp'")
     print("   ✓ Created compound index on 'admin_id' and 'timestamp'")
+
+    print("\n9. Setting up 'chat_conversations' collection...")
+    chat_conversations = db.get_collection("chat_conversations")
+    await chat_conversations.create_index("conversation_key", unique=True)
+    await chat_conversations.create_index("professor_id")
+    await chat_conversations.create_index("student_id")
+    await chat_conversations.create_index("last_message_at")
+    print("   ✓ Created unique index on 'conversation_key'")
+    print("   ✓ Created index on 'professor_id'")
+    print("   ✓ Created index on 'student_id'")
+    print("   ✓ Created index on 'last_message_at'")
+
+    print("\n10. Setting up 'chat_messages' collection...")
+    chat_messages = db.get_collection("chat_messages")
+    await chat_messages.create_index("conversation_id")
+    await chat_messages.create_index("created_at")
+    print("   ✓ Created index on 'conversation_id'")
+    print("   ✓ Created index on 'created_at'")
     
     # Show database stats
     print("\n" + "="*50)
@@ -110,6 +128,8 @@ async def init_db():
     otp_count = await email_otps.count_documents({})
     admin_count = await admins.count_documents({})
     audit_count = await audit_logs.count_documents({})
+    chat_conversation_count = await chat_conversations.count_documents({})
+    chat_message_count = await chat_messages.count_documents({})
     
     print(f"\nDocument counts:")
     print(f"  - Professors: {prof_count}")
@@ -120,6 +140,8 @@ async def init_db():
     print(f"  - Email OTPs: {otp_count}")
     print(f"  - Admins: {admin_count}")
     print(f"  - Audit Logs: {audit_count}")
+    print(f"  - Chat Conversations: {chat_conversation_count}")
+    print(f"  - Chat Messages: {chat_message_count}")
     
     print("\n✓ Database initialization complete!")
     print(f"\nYou can now start your backend server:")

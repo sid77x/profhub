@@ -13,7 +13,7 @@ export const applicationsApi = {
   },
 
   updateApplicationStatus: async (applicationId: string, status: string): Promise<Application> => {
-    const response = await api.put(`/applications/${applicationId}/status?status=${status}`);
+    const response = await api.put(`/applications/${applicationId}/status?new_status=${status}`);
     return response.data;
   },
 

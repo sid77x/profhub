@@ -1,0 +1,196 @@
+from datetime import datetime
+
+from bson import ObjectId
+from pymongo.errors import DuplicateKeyError
+from fastapi import APIRouter, HTTPException, status
+
+from core.database import applications_collection, database, gigs_collection, professors_collection, students_collection
+from schemas.chat import ChatConversationResponse, ChatMessageCreate, ChatMessageResponse
+
+router = APIRouter()
+
+conversations_collection = database.get_collection("chat_conversations")
+messages_collection = database.get_collection("chat_messages")
+
+
+def _conversation_key(gig_id: str, professor_id: str, student_id: str) -> str:
+    return f"{gig_id}:{professor_id}:{student_id}"
+
+
+def _conversation_to_response(conversation: dict, user_id: str) -> dict:
+    other_participant_type = "student" if conversation.get("professor_id") == user_id else "professor"
+    other_participant_id = conversation.get("student_id") if other_participant_type == "student" else conversation.get("professor_id")
+    other_participant_name = conversation.get("student_name") if other_participant_type == "student" else conversation.get("professor_name")
+
+    return {
+        "id": str(conversation["_id"]),
+        "conversation_key": conversation.get("conversation_key", ""),
+        "gig_id": conversation.get("gig_id", ""),
+        "gig_title": conversation.get("gig_title", "Gig Chat"),
+        "professor_id": conversation.get("professor_id", ""),
+        "professor_name": conversation.get("professor_name", "Professor"),
+        "student_id": conversation.get("student_id", ""),
+        "student_name": conversation.get("student_name", "Student"),
+        "application_id": conversation.get("application_id", ""),
+        "unlocked": True,
+        "last_message": conversation.get("last_message"),
+        "last_message_at": conversation.get("last_message_at"),
+        "created_at": conversation.get("created_at", datetime.utcnow()),
+        "other_participant_id": other_participant_id,
+        "other_participant_name": other_participant_name,
+        "other_participant_type": other_participant_type,
+    }
+
+
+def _message_to_response(message: dict) -> dict:
+    return {
+        "id": str(message["_id"]),
+        "conversation_id": message.get("conversation_id", ""),
+        "sender_id": message.get("sender_id", ""),
+        "sender_type": message.get("sender_type", "student"),
+        "sender_name": message.get("sender_name", ""),
+        "message": message.get("message", ""),
+        "created_at": message.get("created_at", datetime.utcnow()),
+    }
+
+
+async def _load_user_name(user_type: str, user_id: str) -> str:
+    if not ObjectId.is_valid(user_id):
+        return "Professor" if user_type == "professor" else "Student"
+
+    if user_type == "professor":
+        doc = await professors_collection.find_one({"_id": ObjectId(user_id)})
+        return doc.get("name", "Professor") if doc else "Professor"
+
+    doc = await students_collection.find_one({"_id": ObjectId(user_id)})
+    return doc.get("name", "Student") if doc else "Student"
+
+
+async def ensure_chat_conversation_for_application(application_id: str) -> dict | None:
+    application = await applications_collection.find_one({"_id": ObjectId(application_id)}) if ObjectId.is_valid(application_id) else None
+    if not application or application.get("status") != "accepted":
+        return None
+
+    gig = await gigs_collection.find_one({"_id": ObjectId(application["gig_id"])}) if ObjectId.is_valid(application.get("gig_id", "")) else None
+    if not gig or not application.get("student_id") or not gig.get("professor_id"):
+        return None
+
+    gig_id = str(application["gig_id"])
+    professor_id = str(gig["professor_id"])
+    student_id = str(application["student_id"])
+    key = _conversation_key(gig_id, professor_id, student_id)
+
+    existing = await conversations_collection.find_one({"conversation_key": key})
+    if existing:
+        return existing
+
+    professor_name = await _load_user_name("professor", professor_id)
+    student_name = await _load_user_name("student", student_id)
+
+    conversation = {
+        "conversation_key": key,
+        "gig_id": gig_id,
+        "gig_title": gig.get("title", "Gig Chat"),
+        "professor_id": professor_id,
+        "professor_name": professor_name,
+        "student_id": student_id,
+        "student_name": student_name,
+        "application_id": str(application_id),
+        "unlocked": True,
+        "last_message": "Chat unlocked",
+        "last_message_at": datetime.utcnow(),
+        "created_at": datetime.utcnow(),
+    }
+
+    try:
+        result = await conversations_collection.insert_one(conversation)
+    except DuplicateKeyError:
+        return await conversations_collection.find_one({"conversation_key": key})
+
+    return await conversations_collection.find_one({"_id": result.inserted_id})
+
+
+@router.get("/chats/{user_type}/{user_id}", response_model=list[ChatConversationResponse])
+async def list_user_chats(user_type: str, user_id: str):
+    if user_type not in ["professor", "student"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user type")
+
+    query = {"student_id": user_id} if user_type == "student" else {"professor_id": user_id}
+    conversations = []
+    async for conversation in conversations_collection.find(query).sort("last_message_at", -1):
+        conversations.append(_conversation_to_response(conversation, user_id))
+    return conversations
+
+
+@router.get("/chat-conversations/{conversation_id}", response_model=ChatConversationResponse)
+async def get_chat_conversation(conversation_id: str, user_id: str):
+    if not ObjectId.is_valid(conversation_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid conversation ID")
+
+    conversation = await conversations_collection.find_one({"_id": ObjectId(conversation_id)})
+    if not conversation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+
+    if user_id not in [conversation.get("student_id"), conversation.get("professor_id")]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have access to this chat")
+
+    return _conversation_to_response(conversation, user_id)
+
+
+@router.get("/chat-conversations/{conversation_id}/messages", response_model=list[ChatMessageResponse])
+async def get_chat_messages(conversation_id: str, user_id: str):
+    if not ObjectId.is_valid(conversation_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid conversation ID")
+
+    conversation = await conversations_collection.find_one({"_id": ObjectId(conversation_id)})
+    if not conversation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+
+    if user_id not in [conversation.get("student_id"), conversation.get("professor_id")]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have access to this chat")
+
+    messages = []
+    async for message in messages_collection.find({"conversation_id": conversation_id}).sort("created_at", 1):
+        messages.append(_message_to_response(message))
+    return messages
+
+
+@router.post("/chat-conversations/{conversation_id}/messages", response_model=ChatMessageResponse, status_code=status.HTTP_201_CREATED)
+async def send_chat_message(conversation_id: str, payload: ChatMessageCreate):
+    if not ObjectId.is_valid(conversation_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid conversation ID")
+
+    conversation = await conversations_collection.find_one({"_id": ObjectId(conversation_id)})
+    if not conversation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+
+    if payload.sender_id not in [conversation.get("student_id"), conversation.get("professor_id")]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have access to this chat")
+
+    sender_name = await _load_user_name(payload.sender_type, payload.sender_id)
+    message_text = payload.message.strip()
+    if not message_text:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message cannot be empty")
+
+    message_doc = {
+        "conversation_id": conversation_id,
+        "sender_id": payload.sender_id,
+        "sender_type": payload.sender_type,
+        "sender_name": sender_name,
+        "message": message_text,
+        "created_at": datetime.utcnow(),
+    }
+
+    result = await messages_collection.insert_one(message_doc)
+    await conversations_collection.update_one(
+        {"_id": ObjectId(conversation_id)},
+        {
+            "$set": {
+                "last_message": message_text,
+                "last_message_at": message_doc["created_at"],
+            }
+        },
+    )
+
+    created_message = await messages_collection.find_one({"_id": result.inserted_id})
+    return _message_to_response(created_message)

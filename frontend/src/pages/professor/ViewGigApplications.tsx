@@ -6,6 +6,15 @@ import { useGigsStore } from '../../store/gigsStore';
 import { applicationsApi } from '../../api/applications';
 import { Application } from '../../types/application';
 
+const getErrorMessage = (error: any) => {
+  const detail = error.response?.data?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) return detail.map((item) => item?.msg || JSON.stringify(item)).join(', ');
+  if (detail && typeof detail === 'object') return JSON.stringify(detail);
+  if (error.message) return error.message;
+  return 'Unknown error';
+};
+
 const ViewGigApplications: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -29,7 +38,7 @@ const ViewGigApplications: React.FC = () => {
       setApplications(prev => prev.map(app => app.id === applicationId ? { ...app, status: status as Application['status'] } : app));
       await applicationsApi.updateApplicationStatus(applicationId, status);
     } catch (error: any) {
-      alert(`Failed: ${error.response?.data?.detail || error.message}`);
+      alert(`Failed: ${getErrorMessage(error)}`);
       loadApplications();
     } finally { setUpdatingStatus(null); }
   };

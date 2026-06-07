@@ -27,6 +27,7 @@ import StudentProfile from './pages/student/StudentProfile';
 import BrowseGigs from './pages/student/BrowseGigs';
 import GigDetail from './pages/student/GigDetail';
 import ProfessorProfile from './pages/student/ProfessorProfile';
+import ChatRoom from './pages/chat/ChatRoom';
 import NotFound from './pages/NotFound';
 
 const App: React.FC = () => {
@@ -83,6 +84,8 @@ const App: React.FC = () => {
         <Route path="/professor" element={<ProtectedRoute><ProfessorLayout /></ProtectedRoute>}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="chats" element={<ChatRoom />} />
+          <Route path="chats/:conversationId" element={<ChatRoom />} />
           <Route path="gigs/open" element={<OpenGigs />} />
           <Route path="gigs/closed" element={<ClosedProjects />} />
           <Route path="gigs/hold" element={<OnHoldProjects />} />
@@ -95,6 +98,8 @@ const App: React.FC = () => {
         <Route path="/student" element={<ProtectedRoute><StudentLayout /></ProtectedRoute>}>
           <Route path="dashboard" element={<StudentDashboard />} />
           <Route path="profile" element={<StudentProfile />} />
+          <Route path="chats" element={<ChatRoom />} />
+          <Route path="chats/:conversationId" element={<ChatRoom />} />
           <Route path="gigs" element={<BrowseGigs />} />
           <Route path="gigs/:id" element={<GigDetail />} />
           <Route path="applications" element={<StudentDashboard />} />

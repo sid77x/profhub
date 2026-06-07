@@ -3,6 +3,7 @@ from bson import ObjectId
 from core.database import applications_collection, gigs_collection, database
 from schemas.application import ApplicationCreate, ApplicationResponse
 from .notifications import create_or_update_application_notification, create_application_status_notification
+from .chat import ensure_chat_conversation_for_application
 
 router = APIRouter()
 students_collection = database["students"]
@@ -81,9 +82,9 @@ async def check_application_exists(gig_id: str, student_id: str):
 
 
 @router.put("/applications/{application_id}/status")
-async def update_application_status(application_id: str, status: str):
+async def update_application_status(application_id: str, new_status: str):
     """Update application status (accept/reject)"""
-    print(f"Updating application {application_id} to status: {status}")
+    print(f"Updating application {application_id} to status: {new_status}")
     
     if not ObjectId.is_valid(application_id):
         raise HTTPException(
@@ -91,10 +92,10 @@ async def update_application_status(application_id: str, status: str):
             detail="Invalid application ID"
         )
     
-    if status not in ["pending", "accepted", "rejected"]:
+    if new_status not in ["pending", "accepted", "rejected"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid status: {status}. Must be pending, accepted, or rejected"
+            detail=f"Invalid status: {new_status}. Must be pending, accepted, or rejected"
         )
     
     # Get application before update to get student_id and gig_id
@@ -107,7 +108,7 @@ async def update_application_status(application_id: str, status: str):
     
     result = await applications_collection.update_one(
         {"_id": ObjectId(application_id)},
-        {"$set": {"status": status}}
+        {"$set": {"status": new_status}}
     )
     
     print(f"Update result: matched={result.matched_count}, modified={result.modified_count}")
@@ -126,16 +127,19 @@ async def update_application_status(application_id: str, status: str):
         )
     
     # Create notification for student if status changed
-    if status in ["accepted", "rejected"]:
+    if new_status in ["accepted", "rejected"]:
         gig = await gigs_collection.find_one({"_id": ObjectId(application_before["gig_id"])})
         if gig:
             await create_application_status_notification(
                 student_id=application_before["student_id"],
                 gig_id=application_before["gig_id"],
                 gig_title=gig["title"],
-                status=status
+                status=new_status
             )
     
+    if new_status == "accepted":
+        await ensure_chat_conversation_for_application(application_id)
+
     application["id"] = str(application["_id"])
     del application["_id"]
     print(f"Returning application: {application}")

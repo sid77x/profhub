@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useProfessorStore } from '../../store/professorStore';
 import { useAuthStore } from '../../store/authStore';
 import NotificationPanel from '../NotificationPanel';
+import ChatPanel from '../ChatPanel';
 import ThemeToggle from '../ThemeToggle';
 
 const ProfessorLayout: React.FC = () => {
@@ -24,6 +25,7 @@ const ProfessorLayout: React.FC = () => {
   const navItems = [
     { path: '/professor/dashboard', label: 'Dashboard' },
     { path: '/professor/profile', label: 'Profile' },
+    { path: '/professor/chats', label: 'Chats' },
   ];
 
   const gigItems = [
@@ -111,6 +113,7 @@ const ProfessorLayout: React.FC = () => {
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <NotificationPanel />
+              <ChatPanel />
               
               <div className="relative hidden md:block">
                 <button
@@ -184,7 +187,7 @@ const ProfessorLayout: React.FC = () => {
                         : 'text-muted-foreground hover:bg-muted'
                     }`}
                   >
-                    <span className="mr-2">{item.emoji}</span>{item.label}
+                    {item.label}
                   </Link>
                 ))}
 
