@@ -1,5 +1,7 @@
 import { api } from './axios';
 
+const WS_BASE_URL = 'http://localhost:8000'.replace(/^http/, 'ws');
+
 export interface ChatConversation {
   id: string;
   conversation_key: string;
@@ -34,6 +36,11 @@ export interface ChatMessageCreate {
   sender_type: 'professor' | 'student';
   message: string;
 }
+
+export const getChatWebSocketUrl = (conversationId: string, userId: string): string => {
+  const params = new URLSearchParams({ user_id: userId });
+  return `${WS_BASE_URL}/ws/chat/${conversationId}?${params.toString()}`;
+};
 
 export const chatApi = {
   getUserChats: async (userType: 'professor' | 'student', userId: string): Promise<ChatConversation[]> => {

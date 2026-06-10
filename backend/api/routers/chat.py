@@ -1,13 +1,50 @@
 from datetime import datetime
+from typing import Set
 
 from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect, status
+from fastapi.encoders import jsonable_encoder
 
 from core.database import applications_collection, database, gigs_collection, professors_collection, students_collection
 from schemas.chat import ChatConversationResponse, ChatMessageCreate, ChatMessageResponse
 
 router = APIRouter()
+
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: dict[str, Set[WebSocket]] = {}
+
+    async def connect(self, conversation_id: str, websocket: WebSocket):
+        await websocket.accept()
+        if conversation_id not in self.active_connections:
+            self.active_connections[conversation_id] = set()
+        self.active_connections[conversation_id].add(websocket)
+
+    def disconnect(self, conversation_id: str, websocket: WebSocket):
+        if conversation_id in self.active_connections:
+            self.active_connections[conversation_id].discard(websocket)
+            if not self.active_connections[conversation_id]:
+                del self.active_connections[conversation_id]
+
+    async def broadcast(self, conversation_id: str, message: dict):
+        if conversation_id not in self.active_connections:
+            return
+
+        payload = jsonable_encoder(message)
+        disconnected = set()
+        for connection in self.active_connections[conversation_id]:
+            try:
+                await connection.send_json(payload)
+            except Exception:
+                disconnected.add(connection)
+
+        for connection in disconnected:
+            self.disconnect(conversation_id, connection)
+
+
+manager = ConnectionManager()
 
 conversations_collection = database.get_collection("chat_conversations")
 messages_collection = database.get_collection("chat_messages")
@@ -155,8 +192,7 @@ async def get_chat_messages(conversation_id: str, user_id: str):
     return messages
 
 
-@router.post("/chat-conversations/{conversation_id}/messages", response_model=ChatMessageResponse, status_code=status.HTTP_201_CREATED)
-async def send_chat_message(conversation_id: str, payload: ChatMessageCreate):
+async def _get_conversation_for_user(conversation_id: str, user_id: str) -> dict:
     if not ObjectId.is_valid(conversation_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid conversation ID")
 
@@ -164,20 +200,38 @@ async def send_chat_message(conversation_id: str, payload: ChatMessageCreate):
     if not conversation:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
 
-    if payload.sender_id not in [conversation.get("student_id"), conversation.get("professor_id")]:
+    participant_ids = {str(conversation.get("student_id")), str(conversation.get("professor_id"))}
+    if str(user_id) not in participant_ids:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have access to this chat")
 
-    sender_name = await _load_user_name(payload.sender_type, payload.sender_id)
-    message_text = payload.message.strip()
-    if not message_text:
+    return conversation
+
+
+async def _create_chat_message(
+    conversation_id: str,
+    conversation: dict,
+    sender_id: str,
+    sender_type: str,
+    message_text: str,
+) -> dict:
+    participant_ids = {str(conversation.get("student_id")), str(conversation.get("professor_id"))}
+    if str(sender_id) not in participant_ids:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have access to this chat")
+
+    if sender_type not in ["professor", "student"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid sender type")
+
+    cleaned_message = message_text.strip()
+    if not cleaned_message:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message cannot be empty")
 
+    sender_name = await _load_user_name(sender_type, sender_id)
     message_doc = {
         "conversation_id": conversation_id,
-        "sender_id": payload.sender_id,
-        "sender_type": payload.sender_type,
+        "sender_id": sender_id,
+        "sender_type": sender_type,
         "sender_name": sender_name,
-        "message": message_text,
+        "message": cleaned_message,
         "created_at": datetime.utcnow(),
     }
 
@@ -186,11 +240,59 @@ async def send_chat_message(conversation_id: str, payload: ChatMessageCreate):
         {"_id": ObjectId(conversation_id)},
         {
             "$set": {
-                "last_message": message_text,
+                "last_message": cleaned_message,
                 "last_message_at": message_doc["created_at"],
             }
         },
     )
 
     created_message = await messages_collection.find_one({"_id": result.inserted_id})
-    return _message_to_response(created_message)
+    message_response = _message_to_response(created_message)
+    await manager.broadcast(conversation_id, {"type": "message", "data": message_response})
+    return message_response
+
+
+@router.post("/chat-conversations/{conversation_id}/messages", response_model=ChatMessageResponse, status_code=status.HTTP_201_CREATED)
+async def send_chat_message(conversation_id: str, payload: ChatMessageCreate):
+    conversation = await _get_conversation_for_user(conversation_id, payload.sender_id)
+    return await _create_chat_message(
+        conversation_id,
+        conversation,
+        payload.sender_id,
+        payload.sender_type,
+        payload.message,
+    )
+
+
+async def websocket_chat(websocket: WebSocket, conversation_id: str, user_id: str = Query(...)):
+    await websocket.accept()
+
+    try:
+        conversation = await _get_conversation_for_user(conversation_id, user_id)
+    except HTTPException as exc:
+        reason = exc.detail if isinstance(exc.detail, str) else "Access denied"
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason=reason)
+        return
+
+    if conversation_id not in manager.active_connections:
+        manager.active_connections[conversation_id] = set()
+    manager.active_connections[conversation_id].add(websocket)
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+            sender_id = data.get("sender_id", "")
+            sender_type = data.get("sender_type", "")
+            message_text = data.get("message", "")
+
+            if str(sender_id) != str(user_id):
+                await websocket.send_json({"type": "error", "detail": "sender_id does not match authenticated user"})
+                continue
+
+            try:
+                await _create_chat_message(conversation_id, conversation, str(sender_id), sender_type, message_text)
+            except HTTPException as exc:
+                detail = exc.detail if isinstance(exc.detail, str) else "Failed to send message"
+                await websocket.send_json({"type": "error", "detail": detail})
+    except WebSocketDisconnect:
+        manager.disconnect(conversation_id, websocket)

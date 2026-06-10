@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MessageSquare, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { chatApi, ChatConversation, ChatMessage } from '../../api/chat';
+import { chatApi, ChatConversation, ChatMessage, getChatWebSocketUrl } from '../../api/chat';
 import { useAuthStore } from '../../store/authStore';
 
 const ChatRoom: React.FC = () => {
@@ -16,6 +16,8 @@ const ChatRoom: React.FC = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [draft, setDraft] = useState('');
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const wsReadyRef = useRef(false);
 
   const routePrefix = useMemo(() => (userType === 'professor' ? '/professor' : '/student'), [userType]);
 
@@ -78,6 +80,57 @@ const ChatRoom: React.FC = () => {
   }, [activeConversation?.id, userId]);
 
   useEffect(() => {
+    if (!activeConversation?.id || !userId) {
+      wsReadyRef.current = false;
+      wsRef.current?.close();
+      wsRef.current = null;
+      return;
+    }
+
+    wsReadyRef.current = false;
+    const ws = new WebSocket(getChatWebSocketUrl(activeConversation.id, userId));
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      wsReadyRef.current = true;
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.type === 'message' && payload.data) {
+          const message = payload.data as ChatMessage;
+          setMessages((prev) => (prev.some((item) => item.id === message.id) ? prev : [...prev, message]));
+          loadConversations();
+        } else if (payload.type === 'error') {
+          toast.error(payload.detail || 'Failed to send message');
+        }
+      } catch {
+        // Ignore malformed websocket payloads.
+      }
+    };
+
+    ws.onerror = () => {
+      wsReadyRef.current = false;
+    };
+
+    ws.onclose = () => {
+      wsReadyRef.current = false;
+      if (wsRef.current === ws) {
+        wsRef.current = null;
+      }
+    };
+
+    return () => {
+      wsReadyRef.current = false;
+      ws.close();
+      if (wsRef.current === ws) {
+        wsRef.current = null;
+      }
+    };
+  }, [activeConversation?.id, userId]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -85,13 +138,22 @@ const ChatRoom: React.FC = () => {
     e.preventDefault();
     if (!activeConversation || !userId || !userType || !draft.trim()) return;
 
+    const payload = {
+      sender_id: userId,
+      sender_type: userType,
+      message: draft.trim(),
+    };
+
+    const ws = wsRef.current;
+    if (ws && wsReadyRef.current && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+      setDraft('');
+      return;
+    }
+
     try {
-      const message = await chatApi.sendMessage(activeConversation.id, {
-        sender_id: userId,
-        sender_type: userType,
-        message: draft.trim(),
-      });
-      setMessages((prev) => [...prev, message]);
+      const message = await chatApi.sendMessage(activeConversation.id, payload);
+      setMessages((prev) => (prev.some((item) => item.id === message.id) ? prev : [...prev, message]));
       setDraft('');
       loadConversations();
     } catch (error: any) {
