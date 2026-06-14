@@ -54,10 +54,24 @@ def _conversation_key(gig_id: str, professor_id: str, student_id: str) -> str:
     return f"{gig_id}:{professor_id}:{student_id}"
 
 
+def _id_query_values(value: str) -> list[str]:
+    values = [str(value)]
+    if ObjectId.is_valid(value):
+        values.append(str(ObjectId(value)))
+    return list(dict.fromkeys(values))
+
+
 def _conversation_to_response(conversation: dict, user_id: str) -> dict:
-    other_participant_type = "student" if conversation.get("professor_id") == user_id else "professor"
-    other_participant_id = conversation.get("student_id") if other_participant_type == "student" else conversation.get("professor_id")
-    other_participant_name = conversation.get("student_name") if other_participant_type == "student" else conversation.get("professor_name")
+    professor_id = str(conversation.get("professor_id", ""))
+    student_id = str(conversation.get("student_id", ""))
+    user_id = str(user_id)
+    other_participant_type = "student" if professor_id == user_id else "professor"
+    other_participant_id = student_id if other_participant_type == "student" else professor_id
+    other_participant_name = (
+        conversation.get("student_name") or "Student"
+        if other_participant_type == "student"
+        else conversation.get("professor_name") or "Professor"
+    )
 
     return {
         "id": str(conversation["_id"]),
@@ -65,9 +79,9 @@ def _conversation_to_response(conversation: dict, user_id: str) -> dict:
         "gig_id": conversation.get("gig_id", ""),
         "gig_title": conversation.get("gig_title", "Gig Chat"),
         "professor_id": conversation.get("professor_id", ""),
-        "professor_name": conversation.get("professor_name", "Professor"),
+        "professor_name": conversation.get("professor_name") or "Professor",
         "student_id": conversation.get("student_id", ""),
-        "student_name": conversation.get("student_name", "Student"),
+        "student_name": conversation.get("student_name") or "Student",
         "application_id": conversation.get("application_id", ""),
         "unlocked": True,
         "last_message": conversation.get("last_message"),
@@ -96,10 +110,10 @@ async def _load_user_name(user_type: str, user_id: str) -> str:
         return "Professor" if user_type == "professor" else "Student"
 
     if user_type == "professor":
-        doc = await professors_collection.find_one({"_id": ObjectId(user_id)})
+        doc = await professors_collection.find_one({"$or": [{"_id": ObjectId(user_id)}, {"_id": user_id}]})
         return doc.get("name", "Professor") if doc else "Professor"
 
-    doc = await students_collection.find_one({"_id": ObjectId(user_id)})
+    doc = await students_collection.find_one({"$or": [{"_id": ObjectId(user_id)}, {"_id": user_id}]})
     return doc.get("name", "Student") if doc else "Student"
 
 
@@ -152,10 +166,14 @@ async def list_user_chats(user_type: str, user_id: str):
     if user_type not in ["professor", "student"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user type")
 
-    query = {"student_id": user_id} if user_type == "student" else {"professor_id": user_id}
+    query_field = "student_id" if user_type == "student" else "professor_id"
+    query = {"$or": [{query_field: value} for value in _id_query_values(user_id)]}
     conversations = []
     async for conversation in conversations_collection.find(query).sort("last_message_at", -1):
-        conversations.append(_conversation_to_response(conversation, user_id))
+        try:
+            conversations.append(_conversation_to_response(conversation, user_id))
+        except Exception:
+            continue
     return conversations
 
 
